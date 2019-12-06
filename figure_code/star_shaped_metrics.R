@@ -14,62 +14,46 @@ cm_poly <- make_poly(convex_mod, "cm")
 cm <- assess_star(cont = cm_poly, C = c(.5, .5),theta = theta)
 circl_poly <- make_poly(circle_mod, "circle")
 circl <- assess_star(cont = circl_poly, C = c(.5, .5),theta = theta)
+curl_poly <- make_poly(curl, "circle")
+curl <- assess_star(cont = curl_poly, C = c(.5, .5),theta = theta)
 
 
+###########################
+#make figure
+##########################
+par(mfrow = c(4, 3))
+#ex 1
+plot(cp_poly)
+plot(cp_poly)
+plot(cp$u_error, add = T, col = 'pink')
+plot(cp$u_approx, add = T, border = 'red')
+plot(cp_poly)
+plot(cp$o_error, add = T, col = 'lightblue')
+plot(cp$o_approx, add = T, border = 'blue')
 
-####################
-#convex mod
-####################
-cm <- make_poly(convex_mod, "cm_poly")
-C_cm <- c(.5, .5)
-l_cm <- make_l(C_cm, theta, r = 5)
-u_cm <- make_poly(pts_on_l(l = l_cm, cont = cm, under = TRUE), "u_cm")
-o_cm <- make_poly(pts_on_l(l = l_cm, cont = cm, under = FALSE), "o_cm")
+#example 2
+plot(cm_poly)
+plot(cm_poly)
+plot(cm$u_error, add = T, col = 'pink')
+plot(cm$u_approx, add = T, border = 'red')
+plot(cm_poly)
+plot(cm$o_error, add = T, col = 'lightblue')
+plot(cm$o_approx, add = T, border = 'blue')
 
-u_area <- diff_reg(cm, u_cm)
-o_area <- diff_reg(u_cm, cm) 
-gArea(u_area)
-gArea(o_area)
+#example 3
+plot(circl_poly)
+plot(circl_poly)
+plot(circl$u_error, add = T, col = 'pink')
+plot(circl$u_approx, add = T, border = 'red')
+plot(circl_poly)
+plot(circl$o_error, add = T, col = 'lightblue')
+plot(circl$o_approx, add = T, border = 'blue')
 
-#plot to demonstrate
-par(mfrow = c(1, 3))
-plot(cm, main = "Contour")
-plot(cm, main = "Under Approximation")
-plot(u_area, add = TRUE, col = 'pink')
-plot(u_cm, add = TRUE, border = 'red')
-plot(cm, main = "Over Approximation")
-plot(o_cm, add = TRUE, border = 'blue')
-plot(o_area, add = TRUE, col = 'lightblue')
-plot(o_cm, add = TRUE, border = 'blue')
-
-####################
-#circle mod
-####################
-
-####################
-#curl
-####################
-assess_star(cur)
-curl <- make_poly(curl, "curl_poly")
-C_curl <- c(.5, .5)
-l_curl <- make_l(C_curl, theta, r = 5)
-u_curl <- make_poly(pts_on_l(l = l_curl, cont = curl, under = TRUE), "u_curl")
-o_curl <- make_poly(pts_on_l(l = l_curl, cont = curl, under = FALSE), "o_curl")
-
-u_area <- diff_reg(curl, u_curl)
-o_area <- diff_reg(u_curl, curl) 
-gArea(u_area)
-gArea(o_area)
-
-#plot to demonstrate
-par(mfrow = c(1, 3))
-plot(curl, main = "Contour")
-plot(curl, main = "Under Approximation")
-plot(u_area, add = TRUE, col = 'pink')
-plot(u_curl, add = TRUE, border = 'red')
-plot(curl, main = "Over Approximation")
-plot(o_curl, add = TRUE, border = 'blue')
-plot(o_area, add = TRUE, col = 'lightblue')
-plot(o_curl, add = TRUE, border = 'blue')
-
-
+#example 4
+plot(curl_poly)
+plot(curl_poly)
+plot(curl$u_error, add = T, col = 'pink')
+plot(curl$u_approx, add = T, border = 'red')
+plot(curl_poly)
+plot(curl$o_error, add = T, col = 'lightblue')
+plot(curl$o_approx, add = T, border = 'blue')
