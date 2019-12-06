@@ -4,6 +4,9 @@ set.seed(103)
 library("ContouR")
 library("IceCast")
 library("raster")
+library("coda")
+library("fields")
+library("viridis")
 
 #settings
 p <- 100 #number of lines on which to build
@@ -46,7 +49,7 @@ for (i in 1:n_obs) {
 }
 
 #rescale everything 
-temp_rescale <- rescale(coords, eps, grid)
+temp_rescale <- rescale(coords = coords, eps = eps, grid = grid)
 coords_scale <- temp_rescale$coords_scale
 grid_scale <- temp_rescale$grid_scale
 
@@ -117,11 +120,13 @@ l_lengths <- sapply(l, function(x){as.numeric(gLength(x))})
 # dev.off()
 
 #priors
-mu0 <- l_lengths/2
-Lambda0_sigma2 <- .05
+mu0 <- (2/3)*l_lengths
+Lambda0_sigma2 <- .5^2
 Lambda0 <- Lambda0_sigma2*diag(p) 
 betaKappa0 <- 10
 betaSigma0 <- (l_lengths/2)/qnorm(.995)
+alphaAlpha0 <- 0
+betaAlpha0 <- 1
 
 #compute y's
 pts <- lapply(conts, function(x) {pts_on_l(l, x)})
@@ -130,17 +135,19 @@ y <- sapply(pts, function(x){apply(x, 1, function(y){get_dist(y, C_hat)})})
 
 #initial values for MCMC
 mu_ini <- apply(y, 1, mean)
-kappa_ini <- 2.5
+kappa_ini <- 2#5
 sigma_obs <-  apply(y, 1, sd)
 sigma_ini <- sigma_obs
 sigma_ini[sigma_ini == 0] <- .0001
+alpha_ini <- 0.5
 
 #MCMC settings
-n_iter <- 10000
-burn_in <- 5000
-sigmaProp_sigma2 <- .1
+n_iter <- 10000 #40000
+burn_in <- 5000 #10000
+sigmaProp_sigma2 <- .05
 muProp_sigma2 <- .01
 kappaPropSD <- .01
+alphaPropSD <- .01
 cz <- contig_zero(sigma_obs)
 g_space <- 5
 g_start <- unlist(apply(cz, 1, function(x){seq(x[1], x[2], g_space)}))
@@ -148,31 +155,47 @@ g_end <- c(g_start[2:length(g_start)] - 1, p)
 
 #non-scaler proposals for MCMC
 theta_dist_est <- theta_dist_mat(thetas)
-sigmaPropCov = sigmaProp_sigma2*compSigma(sigma_ini, kappa_ini, theta_dist_est)
-muPropCov <- muProp_sigma2*compSigma(sigma_ini, kappa_ini, theta_dist_est)
+sigmaPropCov = sigmaProp_sigma2*compSigma(sigma_ini, kappa_ini, alpha_ini, theta_dist_est)
+muPropCov <- muProp_sigma2*compSigma(sigma_ini, kappa_ini, alpha_ini, theta_dist_est)
 
 
 #run MCMC
 start_time <- proc.time()
-fits <- RunMCMC(nIter = n_iter, y,
+fits <- ContouR::RunMCMC(nIter = n_iter, y,
                 mu = mu_ini, mu0 = mu0, Lambda0, muPropCov,
                 kappa = kappa_ini, betaKappa0, kappaPropSD,
                 sigma = sigma_ini, betaSigma0 = betaSigma0, sigmaPropCov,
                 gStart = g_start - 1, gEnd = g_end - 1,
-                thetaDist = theta_dist_est, alpha = 0.5)
+                thetaDist = theta_dist_est, 
+                alpha = alpha_ini, alphaPropSD, alphaAlpha0, betaAlpha0)
 end_time <- proc.time()
 
 #parameter estimates
 mu_est <- apply(fits$mu[,(burn_in + 1):n_iter], 1, mean)
 kappa_est <- mean(fits$kappa[(burn_in + 1):n_iter])
 sigma_est <- apply(fits$sigma[,(burn_in + 1):n_iter],1, mean)
+alpha_est <- mean(fits$alpha[(burn_in + 1):n_iter])
+
+#check MCMC diagnostic
+# N_sigma <- N_mu <- rep(NA, p)
+# for (i in 1:p) {
+#   N_sigma[i] <- max(raftery.diag(fits$sigma[i,], q = .025, r = .0125)$resmatrix[,"N"],
+#                     raftery.diag(fits$sigma[i,], q = .975, r = .0125)$resmatrix[,"N"])
+#   N_mu[i] <- max(raftery.diag(fits$mu[i,], q = .025, r = .0125)$resmatrix[,"N"],
+#                   raftery.diag(fits$mu[i,], q = .975, r = .0125)$resmatrix[,"N"])
+# }
+# 
+# N_kappa <- max(raftery.diag(fits$kappa, q = .025, r = .0125)$resmatrix[,"N"],
+#                raftery.diag(fits$kappa, q = .975, r = .0125)$resmatrix[,"N"]) 
+
+
 
 Sigma_obs <- cov(t(y))
-Sigma_ini <- compSigma(sigma_ini, kappa_ini, alpha = .5, theta_dist_est)
-Sigma_est <- compSigma(sigma_est, kappa_est, alpha = .5, theta_dist_est)
+Sigma_ini <- compSigma(sigma_ini, kappa_ini, alpha_ini, theta_dist_est)
+Sigma_est <- compSigma(sigma_est, kappa_est,  alpha_ini, theta_dist_est)
 par(mfrow = c(1, 2))
-image.plot(Sigma_est)
-image.plot(Sigma_obs)
+image.plot(Sigma_est, zlim = c(-.004, .0145))
+image.plot(Sigma_obs, zlim = c(-.004, .0145))
 
 
 plot(sigma_est, type= "l")
@@ -182,42 +205,28 @@ plot(mu_est, type= "l")
 points(mu_ini, col= 'blue', type= "l") 
 
 plot(fits$kappa, type= "l")
-plot(fits$sigma[100,], type= "l")
+plot(fits$alpha, type= "l")
+
 
 #posterior field
 n_gen <- 100
-gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est,
-                  sigma = sigma_est, Cx = opt_C[1], Cy = opt_C[2],
-                  thetas = thetas)
+gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est, 
+                  alpha = alpha_est, sigma = sigma_est, Cx = C_hat[1],
+                  Cy = C_hat[2], thetas = thetas)
 prob <- prob_field(gens$polys, nrows = n_grid, ncols = n_grid)
 
-#find credible intervals and compute coverage
-creds <- cred_regs(prob, cred_eval = cred_levels, nrows = n_grid, 
-                   ncols = n_grid)
-if (k != 1) {
-  cover <- cover + sapply(creds, 
-                          function(x){eval_cred_reg(truth = test$polys[[k]],
-                                                    cred_reg = x, 
-                                                    center = c(Cx_true, Cy_true), 
-                                                    p_test = p_test,
-                                                    nrows = n_grid, ncols = n_grid)})
-} else {
-  cover <- sapply(creds, 
-                  function(x){eval_cred_reg(truth = test$polys[[k]],
-                                            cred_reg = x, 
-                                            center = c(Cx_true, Cy_true), 
-                                            p_test = p_test,
-                                            nrows = n_grid, ncols = n_grid,
-                                            plotting = TRUE)})
+#compare results to generated contours
+par(mfrow = c(1, 2))
+image.plot(prob, xaxt = "n", yaxt = "n", col = viridis(20))
+for (i in 1:8) {
+  points(coords_scale[[i]], add= T, col = 'black', type= "l")
 }
-end_time <- proc.time()
-elapse_time <- end_time  - start_time
-print(sprintf("Eval %i completed for task_id %i", k, task_id))
-print(elapse_time)
 
+#creds <- cred_regs(prob, c(80, 90, 95), nrows = n_grid, ncols = n_grid)
+plot(creds[[3]], col = 'navy', lwd = 2, border = "navy")
+plot(creds[[2]], col = 'blue', lwd = 2, add = TRUE, border = "blue")
+plot(creds[[1]], col = 'lightblue', lwd = 2, add = TRUE, border = "lightblue")
 
-#save results
-res_cover <- list("task" = task, "cover" = cover)
-save(res_cover, 
-     file = sprintf("/homes/direch/contours/Simulations/sim_results/nObsnGen/task%iShape%snObs%inGen%i.rda",
-                    task_id, task$shape_name, n_obs, n_gen))
+for (i in 1:8) {
+  points(coords_scale[[i]], add= T, type= "l")
+}
