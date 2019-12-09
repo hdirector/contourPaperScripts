@@ -27,7 +27,7 @@ convex_mod <- rescale(coords = list(convex_mod_pts), eps = .1)$coords_scale[[1]]
 
 
 #####################
-#small curls
+#modified circle
 ######################
 r1 <- .3; r2 <- .35
 theta1 <- seq(pi/10, pi/4, length = 3)
@@ -38,23 +38,24 @@ theta5 <- seq(pi + pi/10, 5*pi/4, length = 3)
 theta6 <- seq(5*pi/4 + pi/10, 3*pi/2, length = 3)
 theta7 <- seq(3*pi/2 + pi/10, 7*pi/4, length = 3)
 theta8 <- seq(7*pi/4 + pi/10, 2*pi, length = 3)
-circle_mod <- rbind(cbind(r1*cos(theta1), r1*sin(theta1)),
-                    c(r2*cos(theta1[3]), r2*cos(theta1[3])),
+circle_mod_pts <- rbind(cbind(r1*cos(theta1), r1*sin(theta1)),
+                    c(r2*cos(theta1[2]), r2*sin(theta1[2])),
                     cbind(r1*cos(theta2), r1*sin(theta2)),
                     cbind(r1*cos(theta3), r1*sin(theta3)),
-                    c(r2*cos(theta3[3]), r2*sin(theta3[3])),
+                    c(r2*cos(theta3[2]), r2*sin(theta3[2])),
                     cbind(r1*cos(theta4), r1*sin(theta4)),
                     cbind(r1*cos(theta5), r1*sin(theta5)),
-                    c(r2*cos(theta5[3]), r2*sin(theta5[3])),
+                    c(r2*cos(theta5[2]), r2*sin(theta5[2])),
                     cbind(r1*cos(theta6), r1*sin(theta6)),
                     cbind(r1*cos(theta7), r1*sin(theta7)),
-                    c(r2*cos(theta7[3]), r2*sin(theta7[3])),
+                    c(r2*cos(theta7[2]), r2*sin(theta7[2])),
                     cbind(r1*cos(theta8), r1*sin(theta8)))
+#re-scale 
+circle_mod <- rescale(coords = list(circle_mod_pts), eps = .1)$coords_scale[[1]]
 
-plot(circle_mod, type = "l")
 
 ####################
-#modified circle
+#curl
 #####################
 r1 <- .3; r2 <- .5; r3 <- .4
 theta1 <- seq(0, 7*pi/4, length = 15)
