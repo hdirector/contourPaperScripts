@@ -2,7 +2,6 @@
 rm(list = ls())
 set.seed(103)
 library("ContouR")
-start_time <- proc.time()
 
 #Read in arguments
 args <- commandArgs(trailingOnly =TRUE)
@@ -10,6 +9,7 @@ task_id <- as.numeric(args[1])
 task_path <- args[2]
 load(task_path)
 task <- task_table[task_id,]
+print(sprintf("task_id: %i", task_id))
 
 #simulation settings
 n_obs <- task$n_obs
@@ -17,7 +17,7 @@ n_gen <- task$n_gen
 cred_levels <- c(80, 90, 95)
 n_cred <- length(cred_levels)
 p_test <- task$p_test
-n_evals <- task$n_evals
+n_evals <- task$n_evals 
 n_grid <- task$n_grid
 
 #true parameters
@@ -55,7 +55,8 @@ test <- gen_conts(n_sim = n_evals, mu = mu_true, kappa = kappa_true,
                   sigma = sigma_true, Cx = Cx_true, Cy = Cy_true,
                   thetas = thetas_true)
 
-for (k in 1:n_evals) {  
+for (k in 1:n_evals) {
+  start_time <- proc.time()  
   #simulate observations
   obs <- gen_conts(n_sim = n_obs, mu = mu_true, kappa = kappa_true,
                    sigma = sigma_true, Cx = Cx_true, Cy = Cy_true,
@@ -65,7 +66,7 @@ for (k in 1:n_evals) {
   C_est <- find_center(coords = obs$coords)
   thetas_all <- apply(obs$coords, 3, function(x){calc_angs(C = C_est,
                                                            coords = x)})
-  stopifnot(max(apply(thetas_all, 1, sd)) <= 1e-10)
+  stopifnot(max(apply(thetas_all, 1, sd)) <= 1e-4)
   thetas_est <- apply(thetas_all, 1, mean)
   
   #measure and store y
@@ -102,24 +103,38 @@ for (k in 1:n_evals) {
   prob <- prob_field(gens$polys, nrows = n_grid, ncols = n_grid)
   
   #find credible intervals and compute coverage
-  creds <- cred_regs(prob, cred_levels, nrows = n_grid, ncols = n_grid)
+  creds <- cred_regs(prob, cred_eval = cred_levels, nrows = n_grid, 
+                     ncols = n_grid)
+  
+  #compute test to current grid
+  # test_k <- conv_to_poly(conv_to_grid(test$polys[[k]], nrows = n_grid, 
+  #                                   ncols = n_grid, xmn = .3, xmx = .7, 
+  #                                   ymn = .3,  ymx = .7))
   if (k != 1) {
     cover <- cover + sapply(creds, 
-                            function(x){eval_cred_reg(truth = test$polys[[k]],
+                            function(x){eval_cred_reg(truth = test_k,
                                                       cred_reg = x, 
                                                       center = c(Cx_true, Cy_true), 
-                                                      p_test = p_test)})
+                                                      p_test = p_test,
+                                                      nrows = n_grid, 
+                                                      ncols = n_grid)})
   } else {
     cover <- sapply(creds, 
-                    function(x){eval_cred_reg(truth = test$polys[[k]],
+                    function(x){eval_cred_reg(truth = test_k,
                                               cred_reg = x, 
                                               center = c(Cx_true, Cy_true), 
-                                              p_test = p_test)})
+                                              p_test = p_test,
+                                              nrows = n_grid, 
+                                              ncols = n_grid, plotting = TRUE)})
   }
+  end_time <- proc.time()
+  elapse_time <- end_time  - start_time
   print(sprintf("Eval %i completed for task_id %i", k, task_id))
+  print(elapse_time)
 }
-end_time <- proc.time()
-end_time  - start_time
-print(sprintf("task_id %i completed", task_id))
-print(elapse_time)
-#save(cover, file = "")
+
+#save results
+res_cover <- list("task" = task, "cover" = cover)
+save(res_cover, 
+     file = sprintf("/homes/direch/contours/Simulations/sim_results/nObsnGen/task%iShape%snObs%inGen%i.rda",
+                    task_id, task$shape_name, n_obs, n_gen))

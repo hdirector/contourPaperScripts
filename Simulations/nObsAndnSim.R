@@ -3,7 +3,7 @@ rm(list = ls())
 set.seed(103)
 
 comp_coverage <- function(settings, pars, p_test, n_evals) {
-  library("PolygonKernels")
+  library("ContouR")
   #varied settings
   n_obs <- settings[1]
   n_gen <- settings[2]
@@ -22,7 +22,7 @@ comp_coverage <- function(settings, pars, p_test, n_evals) {
   
   #Priors (formal criteria needed)
   p_est <- p_true
-  mu0 <-  rep(.15, p_est); Lambda0 <- .05*diag(p_est) 
+  mu0 <-  rep(.1, p_est); Lambda0 <- .1*diag(p_est) 
   betaKappa0 <- 100
   betaSigma0 <- .1
 
@@ -60,9 +60,9 @@ comp_coverage <- function(settings, pars, p_test, n_evals) {
     
     #initial values
     temp <- XToWY(Cx = C_est[1], Cy = C_est[2], x = x, thetas_est)
-    mu_ini <- rep(mean(apply(temp$y, 1, mean)), p_est) 
+    mu_ini <- apply(temp$y, 1, mean)
     kappa_ini = 5
-    sigma_ini <-  rep(mean(apply(temp$y, 1, sd)), p_est)
+    sigma_ini <-  apply(temp$y, 1, sd)
 
     #non-scaler proposals
     theta_dist_est <- compThetaDist(p_est, theta_space)
@@ -82,7 +82,7 @@ comp_coverage <- function(settings, pars, p_test, n_evals) {
     mu_est <- apply(fits$mu[,(burn_in + 1):n_iter], 1, mean)
     kappa_est <- mean(fits$kappa[(burn_in + 1):n_iter])
     sigma_est <- apply(fits$sigma[,(burn_in + 1):n_iter],1, mean)
-    rm(fits) #save memory
+    #rm(fits) #save memory
     
     #posterior field
     gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est,

@@ -40,24 +40,21 @@ pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/sample_shapes
     height = 4, width = 8.5)
 par(mfrow = c(1, 3))
 #stop_sign
-plot(obs_stop$poly[[1]],xlim = c(.3, .7), ylim = c(.3, .7), lwd = .35,
-     main = sprintf("%i Observed Contours and Shared Kernel", n_obs))
+plot(obs_stop$poly[[1]],xlim = c(.3, .7), ylim = c(.3, .7), lwd = .35)
 plot(kern_stop$poly, add = T, col = 'red', border = 'red')
 for (i in 1:n_obs) {
   plot(obs_stop$polys[[i]], add = T, lwd = .35)
 }
 
 #tie
-plot(obs_tie$poly[[1]],xlim = c(.3, .7), ylim = c(.3, .7), lwd = .35,
-     main = sprintf("%i Observed Contours and Shared Kernel", n_obs))
+plot(obs_tie$poly[[1]],xlim = c(.3, .7), ylim = c(.3, .7), lwd = .35)
 plot(kern_tie$poly, add = T, col = 'red', border = 'red')
 for (i in 1:n_obs) {
   plot(obs_tie$poly[[i]], add = T, lwd = .35)
 }
 
 #tree
-plot(obs_tree$polys[[1]],xlim = c(.3, .7), ylim = c(.3, .7), lwd = .35,
-     main = sprintf("%i Observed Contours and Shared Kernel", n_obs))
+plot(obs_tree$polys[[1]],xlim = c(.3, .7), ylim = c(.3, .7), lwd = .35)
 plot(kern_tree$poly, add = T, col = 'red', border  = 'red')
 for (i in 1:n_obs) {
   plot(obs_tree$polys[[i]], add = T, lwd = .35)
