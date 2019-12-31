@@ -102,8 +102,8 @@ for (test_year in 2010:2017)  {
   sigma_ini[sigma_ini == 0] <- .0001
 
   #MCMC settings
-  n_iter <- 10000 #40000
-  burn_in <- 5000 #10000
+  n_iter <- 40000
+  burn_in <- 10000
   sigmaProp_sigma2 <- .05
   muProp_sigma2 <- .01
   kappaPropSD <- .01
@@ -119,12 +119,12 @@ for (test_year in 2010:2017)  {
   
   #run MCMC
   start_time <- proc.time()
-  fits <- RunMCMC(nIter = n_iter, y,
-                  mu = mu_ini, mu0 = mu0, Lambda0, muPropCov,
-                  kappa = kappa_ini, betaKappa0, kappaPropSD,
-                  sigma = sigma_ini, betaSigma0 = betaSigma0, sigmaPropCov,
-                  gStart = g_start - 1, gEnd = g_end - 1,
-                  thetaDist = theta_dist_est)
+  fits <- ContouR::RunMCMC(nIter = n_iter, y,
+                          mu = mu_ini, mu0 = mu0, Lambda0, muPropCov,
+                          kappa = kappa_ini, betaKappa0, kappaPropSD,
+                          sigma = sigma_ini, betaSigma0 = betaSigma0, sigmaPropCov,
+                          gStart = g_start - 1, gEnd = g_end - 1,
+                          thetaDist = theta_dist_est)
   end_time <- proc.time()
   
   #parameter estimates
@@ -169,7 +169,7 @@ for (test_year in 2010:2017)  {
   n_gen <- 100
   gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est, 
                     sigma = sigma_est, Cx = C_hat[1],
-                    Cy = C_hat[2], thetas = thetas)
+                    Cy = C_hat[2], thetas = thetas, bd = bd_scale)
   prob <- prob_field(gens$polys, nrows = n_grid, ncols = n_grid)
   
   #compare results to generated contours
@@ -206,7 +206,8 @@ for (test_year in 2010:2017)  {
   #Find C_hat for evaluation contour
   keep_eval <- gIntersects(grid_pts_all, eval, byid = TRUE)
   grid_pts_eval <- SpatialPoints(grid_scale[keep_eval,])
-  C_hat_eval <- best_C(C_poss = grid_pts_eval@coords, conts = eval, thetas = thetas)
+  C_hat_eval <- best_C(C_poss = grid_pts_eval, conts = eval, 
+                       thetas = thetas)
   
   #evaluate coverage
   pdf(file = sprintf("/users/hdirector/desktop/cred_ints%i.pdf", test_year),
