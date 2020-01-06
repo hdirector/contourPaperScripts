@@ -10,6 +10,10 @@ library("viridis")
 
 #input settings
 for (test_year in 2010:2017)  {
+  #data about original grid
+  xmn = -3850; xmx = 3750; ymn = -5350; ymx = 5850
+  box_size <- 25
+  
   p <- 100 #number of lines on which to build
   eps <- .1 #distance away from edge of box for rescale
   start_year <- 2010
@@ -41,8 +45,7 @@ for (test_year in 2010:2017)  {
   reg <- rm_holes(raster::aggregate(reg))
   reg_coords <- reg@polygons[[1]]@Polygons[[1]]@coords
 
-  #make a grid of points at the center of each square (
-  xmn = -3850; xmx = 3750; ymn = -5350; ymx = 5850
+  #make a grid of points at the center of each square 
   x_cent <- seq(xmn + 13.5, xmx, 150)
   y_cent <- seq(ymn + 13.5, ymx, 150)
   grid <- expand.grid(x_cent, y_cent)
@@ -57,13 +60,14 @@ for (test_year in 2010:2017)  {
     coords[[i]] <- temp@polygons[[1]]@Polygons[[1]]@coords
   }
   
-  #rescale everything 
-  temp_rescale <- rescale(coords = coords, eps = eps, grid = grid, 
-                          bd = reg_coords)
+   #rescale everything 
+  temp_rescale <- rescale(coords = coords, eps = eps, box_size = box_size, 
+                          grid = grid, bd = reg_coords)
   coords_scale <- temp_rescale$coords_scale
   grid_scale <- temp_rescale$grid_scale
   bd_scale <- temp_rescale$bd_scale
   bd_scale <- bd_scale[nrow(bd_scale):1, ] #reverse order to match generated contours
+  box_size <- temp_rescale$box_size
   
   #Switch to Spatial objects
   grid_pts_all <- SpatialPoints(grid_scale)
@@ -170,13 +174,24 @@ for (test_year in 2010:2017)  {
   gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est, 
                     sigma = sigma_est, Cx = C_hat[1],
                     Cy = C_hat[2], thetas = thetas, bd = bd_scale)
-  prob <- prob_field(gens$polys, nrows = n_grid, ncols = n_grid)
   
+
+  #set up grid to align with data
+  grid_need <- 1/box_size
+  xmn <- ymn <- 0 
+  xmx <- ymx <- 1 
+  x_bds <- seq(xmn, xmx, by = box_size[1])
+  y_bds <- seq(ymn, ymx, by = box_size[2])
+
+  prob <- prob_field(polys = gens$polys, nrows = length(y_bds) - 1, 
+                     ncols = length(x_bds) - 1,  xmn = xmn, xmx = xmx, 
+                     ymn = ymn, ymx = ymx)
+
   #compare results to generated contours
   pdf(sprintf("/users/hdirector/desktop/probAndGen%i.pdf", test_year),
       width = 8.5, height = 4)
   par(mfrow = c(1, 2))
-  image.plot(prob, xaxt = "n", yaxt = "n", col = viridis(20),
+  image.plot(x_bds, y_bds, prob, xaxt = "n", yaxt = "n", col = viridis(20),
              main = "Probability Field")
   for (i in train_ind) {
     points(coords_scale[[i]], col = 'black', type= "l")
@@ -228,3 +243,4 @@ for (test_year in 2010:2017)  {
                              test_year))
   print(sprintf("completed analysis of year %i", test_year))
 }
+
