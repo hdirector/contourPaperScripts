@@ -172,6 +172,4 @@ for (k in 1:n_evals) {
 
 #save results
 res_cover <- list("task" = task, "cover" = cover)
-save(res_cover, 
-     file = sprintf("/homes/direch/contours/Simulations/sim_results/variedP/task%iShape%snObs%inGen%i.rda",
-                    task_id, task$shape_name, n_obs, n_gen))
+
