@@ -22,10 +22,10 @@ template_stop <- rbind(c(.6, .5), c(.6, .55), c(.575, .575), c(.55, .6),
                       c(.4, .5), c(.4, .45), c(.425, .425), c(.45, .4), 
                       c(.5, .4), c(.55, .4), c(.575, .425), c(.6, .45))
 #re-scale to take up whole space
-template_stop <- rescale(coords = list(template_stop), eps = .1)
+template_stop <- rescale(coords = list(template_stop), eps = .1, box_size = 1)
 
 #make poly and find means
-stop_poly <- make_poly(template_stop, "stop")
+stop_poly <- make_poly(template_stop$coords_scale[[1]], "stop")
 mu_stop <- paral_lengths(p, stop_poly, c(Cx, Cy))
 
 #other parameters
@@ -40,7 +40,7 @@ stop_prob <- prob_field(polys = gens_stop$polys, nrows = n_grid, ncols = n_grid)
 #save shape parameters
 stop_sign <- list("mu" = mu_stop, "kappa" = kappa_stop, "sigma" = sigma_stop, 
                   "Cx" = Cx, "Cy" = Cy, "theta" = theta)
-#save(stop_sign, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/stop_sign.rda")
+save(stop_sign, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/stop_sign.rda")
 
 
 #####################
@@ -52,27 +52,27 @@ template_tie <- rbind(c(.6, .5), c(.6, .6), c(.5, .55),
                       c(.5, .45), c(.6, .4))
 
 #re-scale to take up whole space
-template_tie <- rescale(coords = list(template_tie), eps = .3)
+template_tie <- rescale(coords = list(template_tie), eps = .1, box_size = 1)
 
 #make poly and find means
-tie_poly <- make_poly(template_tie, "tie")
+tie_poly <- make_poly(template_tie$coords_scale[[1]], "tie")
 mu_tie <- paral_lengths(p, tie_poly, c(Cx, Cy))
 
 #other parameters
 kappa_tie <- .1
-sigma_tie <- c(seq(.025, .033, length = 8), seq(.033, .025, length = 7),
-                seq(.025, .033, length = 7), seq(.033, .025, length = 8))
+sigma_tie <- c(seq(.028, .033, length = 8), seq(.033, .028, length = 7),
+               seq(.028, .033, length = 7), seq(.033, .028, length = 8))
 
 #generate probability distribution
-gens_tie <- gen_conts(n_sim = n_gen, mu_tie, kappa = kappa_tie,
-                      sigma = sigma_tie, Cx = Cx, Cy = Cy, theta)
+gens_tie <- gen_conts(n_sim = n_gen, mu = mu_tie, kappa = kappa_tie,
+                      sigma = sigma_tie, Cx = Cx, Cy = Cy, thetas = theta)
 tie_prob <- prob_field(polys = gens_tie$polys, nrows = n_grid, ncols = n_grid)
 
 
 #save shape parameters
 tie <- list("mu" = mu_tie, "kappa" = kappa_tie, "sigma" = sigma_tie, 
             "Cx" = Cx, "Cy" = Cy, "theta" = theta)
-#save(tie, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/tie.rda")
+save(tie, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/tie.rda")
 
 
 ##############################
@@ -88,13 +88,11 @@ template_tree <- rbind(c(.52, .52), c(.64, .58), c(.53, .55),
                        c(.52, .52))
 
 #re-scale to take up whole space
-template_tree <- rescale(coords = list(template_tree), eps = .3)
-
+template_tree <- rescale(coords = list(template_tree), eps = .1, box_size = 1)
 
 #make poly and find means
-tree_poly <- make_poly(template_tree, "tree")
+tree_poly <- make_poly(template_tree$coords_scale[[1]], "tree")
 mu_tree <- paral_lengths(p, tree_poly, c(Cx, Cy))
-
 
 #other parameters
 kappa_tree <- .15
@@ -110,7 +108,7 @@ tree_prob <- prob_field(polys = gens_tree$polys, nrows = n_grid, ncols = n_grid)
 #save shape parameters
 tree <- list("mu" = mu_tree, "kappa" = kappa_tree, "sigma" = sigma_tree, 
             "Cx" = Cx, "Cy" = Cy, "theta" = theta)
-#save(tree, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/tree.rda")
+save(tree, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/tree.rda")
 
 
 ###################
@@ -153,7 +151,5 @@ for (i in 2:n_demo) {
   plot(gens_tree$polys[[i]], add = T, lwd = .35)
 }
 #dev.off()
-
-
 
 
