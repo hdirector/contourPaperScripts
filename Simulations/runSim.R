@@ -160,8 +160,7 @@ for (k in 1:n_evals) {
                                               cred_reg = x, 
                                               center = C_true, 
                                               p_test = p_test,
-                                              nrows = n_grid, ncols = n_grid,
-                                              plotting = TRUE)})
+                                              nrows = n_grid, ncols = n_grid)})
   }
   #rm(creds) #reduce memory
   end_time <- proc.time()
