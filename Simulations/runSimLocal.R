@@ -3,109 +3,81 @@ rm(list = ls())
 set.seed(103)
 library("ContouR")
 
-#Read in arguments
-task_id <- 1
+#Read in simulation settings
+task_id <- 3
 task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/variedPTaskTable.rda"
 # task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/nObsnGenTaskTable.rda"
 # task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/misspecTaskTable.rda"
 load(task_path)
 task <- task_table[task_id,]
 print(sprintf("task_id: %i", task_id))
+attach(task)
 
-#simulation settings
-n_obs <- task$n_obs
-n_gen <- task$n_gen
+#credible intervals
 cred_levels <- c(80, 90, 95)
 n_cred <- length(cred_levels)
-p_test <- task$p_test
-n_evals <- task$n_evals 
-n_grid <- task$n_grid
-n_C_poss <- task$n_C_poss
-p_prop <- task$p_prop
-misspec <- task$misspec
-r1_min <- task$r1_min
-r1_max <- task$r1_max
-r2_min <- task$r2_min
-r2_max <- task$r2_max
-n_curl_min <- task$n_curl_min
-n_curl_max <- task$n_curl_max
 
 #true parameters
-p_true <- task$p_true
 theta_space_true <- 2*pi/p_true
-theta_true <- seq(theta_space_true/2, 2*pi, theta_space_true)
+thetas_true <- seq(theta_space_true/2, 2*pi, theta_space_true)
 shape_name <- as.character(task$shape_name)
 pars <- get(shape_name)
 C_true <- pars$C
-mu_true <- discrete_mu(pars$a, pars$b, pars$d, theta_true)
-sigma_true <- discrete_sigma(pars$l, pars$k, pars$m, theta_true)
+mu_true <- pars$mu
+sigma_true <- pars$sigma
 kappa_true <- pars$kappa
-
-#select the number of p's to evaluate
-p_fit <- floor(p_prop*p_true)
-theta_space_obs <- 2*pi/p_fit
-theta_obs <- seq(theta_space_obs/2, 2*pi, theta_space_obs)
-mu_obs <- discrete_mu(pars$a, pars$b, pars$d, theta_obs)
-sigma_obs <- discrete_sigma(pars$l, pars$k, pars$m, theta_obs)
-
-#priors
-mu0_indiv <- task$mu0
-mu0 <- rep(mu0_indiv, p_fit)
-Lambda0_sigma2 <- task$Lambda0_sigma2
-Lambda0 <- Lambda0_sigma2*diag(p_fit) 
-betaKappa0 <- task$betaKappa0
-betaSigma0 <- rep(task$betaSigma0, p_fit)
-
-#MCMC settings
-n_iter <- task$n_iter
-burn_in <- task$burn_in
-sigmaProp_sigma2 <- task$sigmaProp_sigma2
-muProp_sigma2 <- task$muProp_sigma2
-kappaPropSD <- task$kappaProp_SD
-g_space <- task$g_space
-g_space <- 1
-g_start <- seq(1, p_fit, by = g_space)
-g_end <- c(seq(g_space, p_fit, by = g_space), p_true)
 
 #sample test contours from the truth for later testing
 box <- bbox()
 bd <- box@polygons[[1]]@Polygons[[1]]@coords
 if (misspec) {
   test <- gen_misspec(n_sim = n_evals, mu = mu_true, kappa = kappa_true,
-                      sigma = sigma_true, Cx = Cx_true, Cy = Cy_true,
-                      thetas = thetas_true, r1_min = r1_min, r1_max = r1_max,
-                      r2_min = r2_min, r2_max = r2_max, n_curl_min = n_curl_min,
+                      sigma = sigma_true, C = C_true,thetas = thetas_true, 
+                      r1_min = r1_min, r1_max = r1_max, r2_min = r2_min,
+                      r2_max = r2_max, n_curl_min = n_curl_min,
                       n_curl_max = n_curl_max, bd = bd)
 } else {
   test <- gen_conts(n_sim = n_evals, mu = mu_true, kappa = kappa_true,
-                    sigma = sigma_true, C = C_true, thetas = theta_true, bd = bd)
+                    sigma = sigma_true, C = C_true, thetas = thetas_true, 
+                    bd = bd)
 }
 
 #grid of points for possible C
 x_pts <- y_pts <- seq(0, 1, length = n_C_poss)
 C_poss <- SpatialPoints(expand.grid(x_pts, y_pts))
 
+#intial theta's with high p
+theta_space_init <- 2*pi/p_init
+thetas_init <- seq(theta_space_init/2, 2*pi, theta_space_init)
+
 for (k in 1:n_evals) {
   start_time <- proc.time()  
   #simulate observations
   if (misspec) {
-    obs <- gen_misspec(n_sim = n_obs, mu = mu_obs, kappa = kappa_true,
-                       sigma = sigma_obs, C_true,
-                       thetas = theta_obs, r1_min = r1_min, r1_max = r1_max,
-                       r2_min = r2_min, r2_max = r2_max, n_curl_min = n_curl_min,
+    obs <- gen_misspec(n_sim = n_obs, mu = mu_true, kappa = kappa_true,
+                       sigma = sigma_true, C = C_true,thetas = thetas_true, 
+                       r1_min = r1_min, r1_max = r1_max, r2_min = r2_min, 
+                       r2_max = r2_max, n_curl_min = n_curl_min,
                        n_curl_max = n_curl_max, bd = bd)
   } else {
-    obs <- gen_conts(n_sim = n_obs, mu = mu_obs, kappa = kappa_true,
-                     sigma = sigma_obs, C = C_true,
-                     thetas = theta_obs, bd = bd)
+    obs <- gen_conts(n_sim = n_obs, mu = mu_true, kappa = kappa_true,
+                     sigma = sigma_true, C = C_true, thetas = thetas_true,
+                     bd = bd)
   }
   
-  #find "best" center point 
-  C_est <- best_C(bd = bd, conts = obs$polys, thetas = theta_obs)
+  
+  #find estimated center point, p, and theta
+  area_tol <- err_prop*mean(sapply(obs$polys, gArea)) 
+  C_est <- best_C(bd = bd, conts = obs$polys, thetas = thetas_init, 
+                  area_tol = area_tol)
+  p_est <- reduce_p(C = C_est, conts = obs$polys, area_tol = area_tol, p = p_init, 
+                    red_prop = .05)
+  theta_space_est <- 2*pi/p_est
+  thetas_est <- seq(theta_space_est/2, 2*pi, theta_space_est)
   
   #measure and store y
   #Make sets of lines, l, for  C_hat and get y's
-  l_untrim <- make_l(C = C_est, theta_obs)
+  l_untrim <- make_l(C = C_est, thetas_est)
   l <- lapply(l_untrim, function(x){gIntersection(x, box)})
   l_lengths <- sapply(l, function(x){as.numeric(gLength(x))})
   
@@ -119,15 +91,29 @@ for (k in 1:n_evals) {
   kappa_ini <- .1
   sigma_ini <-  apply(y, 1, sd)
   
+  #priors
+  mu0_indiv <- task$mu0
+  mu0 <- rep(mu0_indiv, p_est)
+  Lambda0_sigma2 <- task$Lambda0_sigma2
+  Lambda0 <- Lambda0_sigma2*diag(p_est) 
+  betaKappa0 <- task$betaKappa0
+  betaSigma0 <- rep(task$betaSigma0, p_est)
+  
+  #MCMC set up
+  g_space <- task$g_space
+  g_space <- 1
+  g_start <- seq(1, p_est, by = g_space)
+  g_end <- c(seq(g_space, p_est, by = g_space), p_est)
+  
   #non-scaler proposals for MCMC
-  theta_dist_est <- theta_dist_mat(theta_obs)
+  theta_dist_est <- theta_dist_mat(thetas_est)
   sigmaPropCov = sigmaProp_sigma2*compSigma(sigma_ini, kappa_ini, theta_dist_est)
   muPropCov <- muProp_sigma2*compSigma(sigma_ini, kappa_ini, theta_dist_est)
   
   #run MCMC
   fits <- ContouR::RunMCMC(nIter = n_iter, y,
                            mu = mu_ini, mu0 = mu0, Lambda0, muPropCov,
-                           kappa = kappa_ini, betaKappa0, kappaPropSD,
+                           kappa = kappa_ini, betaKappa0, kappaProp_SD,
                            sigma = sigma_ini, betaSigma0 = betaSigma0, sigmaPropCov,
                            gStart = g_start - 1, gEnd = g_end - 1,
                            thetaDist = theta_dist_est)
@@ -140,7 +126,7 @@ for (k in 1:n_evals) {
   
   #posterior field
   gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est,
-                    sigma = sigma_est, C = C_est, thetas = theta_obs, bd = bd)
+                    sigma = sigma_est, C = C_est, thetas = thetas_est, bd = bd)
   prob <- prob_field(polys = gens$polys, nrows = n_grid, ncols = n_grid)
   #rm(gens) #reduce memory
   
@@ -161,8 +147,7 @@ for (k in 1:n_evals) {
                                               cred_reg = x, 
                                               center = C_true, 
                                               p_test = p_test,
-                                              nrows = n_grid, ncols = n_grid,
-                                              plotting = TRUE)})
+                                              nrows = n_grid, ncols = n_grid)})
   }
   #rm(creds) #reduce memory
   end_time <- proc.time()
@@ -174,9 +159,12 @@ for (k in 1:n_evals) {
 #save results
 res_cover <- list("task" = task, "cover" = cover)
 if (task_name == "nObsnGen") {
-  file_name <- sprintf("%s_id%i_%s_obs%i_gen%i", task_name, task_id, shape_name, n_obs, n_gen)
+  file_name <- sprintf("%s_id%i_%s_obs%i_gen%i", task_name, task_id, shape_name,
+                       n_obs, n_gen)
 } else if (task_name == "variedP") {
-  file_name <- sprintf("%s_id%i_%s_pProp%f", task_name, task_id, shape_name, p_prop)
+  file_name <- sprintf("%s_id%i_%s_pProp%f", task_name, task_id, shape_name, 
+                       err_prop)
 } else if (task_name == "misspec") {
-  file_name <- sprintf("%s_id%i_%s_nCurlMin%i", task_name, task_id, shape_name, n_curl_min)
+  file_name <- sprintf("%s_id%i_%s_nCurlMin%i", task_name, task_id, shape_name,
+                       n_curl_min)
 }
