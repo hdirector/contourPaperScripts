@@ -12,5 +12,5 @@ df <- data.frame("nominal" = c(.8, .9, .95),
                 "mean" = apply(cover_all/n_years, 2, mean),
                 "sd" = apply(cover_all/n_years, 2, sd))
 library("xtable")
-xtable(df, digits = 3)
+xtable(df, digits = 2)
 
