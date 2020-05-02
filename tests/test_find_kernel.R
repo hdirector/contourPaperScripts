@@ -167,10 +167,10 @@ for (i in 1:nrow(edge_test)) {
 #Test case 3: not star-shaped
 #-----------------------------
 coords3 <- rbind(c(.65, .25), c(.75, .35), c(.55, .45), c(.65, .6), c(.35, .6),
-                 c(.55, .55), c(.45, .2))
+                 c(.55, .55), c(.45, .2), c(.65, .25))
 plot(bb)
 points(coords3, type= "l")
-test3_kernel <- find_kernel(coords3)
+test3_kernel <- find_kernel(coords = coords3)
 test3_kernel #NULL as expected
 
 
