@@ -3,16 +3,29 @@ task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/
 load(task_path)
 
 n_tasks <- nrow(task_table)
+n_evals <- 50
 
-res_misspec <- cbind(task_table[1:n_tasks,c("shape_name", "n_curl_min", "n_curl_max")],
-             rep(NA, n_tasks), rep(NA, n_tasks), rep(NA, n_tasks))
-colnames(res_misspec)[4:6] <- c("Nominal .8", "Nominal .9", "Nominal .95")
+res_misspec <- data.frame("mean_0_1" = rep(NA, 3), "sd_0_1" = rep(NA, 3),
+                         "mean_2_3" = rep(NA, 3), "sd_2_3" = rep(NA, 3),
+                         "mean_4_5" = rep(NA, 3),"sd_4_5" = rep(NA, 3))
+
+rownames(res_misspec)[1:3] <- c("0.8", "0.9", "0.95")
 
 
-for (i in c(1:2, 4:n_tasks)) {
+for (i in 1:n_tasks) {
   load(sprintf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/sim_results/misspec/misspec_id%i_%s_nCurlMin%i.rda",
                i, task_table[i,]$shape, task_table[i,]$n_curl_min))
-  res_misspec[i,  c("Nominal .8", "Nominal .9", "Nominal .95")] <- apply(res_cover$cover, 2, mean)/50
+  if (task_table[i,]$n_curl_min == 0) {
+    res_misspec[,"mean_0_1"] <- apply(res_cover$cover, 2, mean)/n_evals
+    res_misspec[,"sd_0_1"] <- apply(res_cover$cover, 2, sd)/n_evals
+  } else if (task_table[i,]$n_curl_min == 2) {
+    res_misspec[,"mean_2_3"] <- apply(res_cover$cover, 2, mean)/n_evals
+    res_misspec[,"sd_2_3"] <- apply(res_cover$cover, 2, sd)/n_evals
+  } else if (task_table[i,]$n_curl_min == 4) {
+    res_misspec[,"mean_4_5"] <- apply(res_cover$cover, 2, mean)/n_evals
+    res_misspec[,"sd_4_5"] <- apply(res_cover$cover, 2, sd)/n_evals
+  }
+    
 }
 
 xtable::xtable(res_misspec, digits = 3)
