@@ -2,154 +2,179 @@ rm(list = ls())
 library("viridis")
 library("fields")
 library("ContouR")
+set.seed(103)
 
 ##############################
 #constants across shapes
 ##############################
-n_grid <- 300
+n_grid <- 200
 n_gen <- 100
-p <- 30
-Cx <- .5; Cy <- .5
+p <- 50
+C <- c(.5, .5)
 theta_space <- 2*pi/p
 theta <- seq(theta_space/2, 2*pi, by = theta_space)
 
-###################
-#stop sign (convex)
-###################
-#write down coordinates of roughly-desired shape (a stop sign)
-template_stop <- rbind(c(.6, .5), c(.6, .55), c(.575, .575), c(.55, .6), 
-                      c(.5, .6), c(.45, .6), c(.425, .575), c(.4, .55), 
-                      c(.4, .5), c(.4, .45), c(.425, .425), c(.45, .4), 
-                      c(.5, .4), c(.55, .4), c(.575, .425), c(.6, .45))
-#re-scale to take up whole space
-template_stop <- rescale(coords = list(template_stop), eps = .1, box_size = 1)
+############################
+#shape A
+############################
+#coordinates and polygon of mean
+r <- c(seq(.29, .35, length = 4), seq(.35, .29, length = 4),
+       seq(.29, .38, length = 4), seq(.38, .25, length = 4),
+       seq(.25, .17, length = 5), seq(.17, .25, length = 5),
+       rep(.25, 10), seq(.25, .15, length = 5), seq(.15, .25, length = 5), 
+       rep(.25, 4))
+template_shapeA <- cbind(C[1] + r*cos(theta), C[2] + r*sin(theta))
+template_shapeA <- rescale(coords = list(template_shapeA), eps = .2, box_size = 1) #eps = .2
 
-#make poly and find means
-stop_poly <- make_poly(template_stop$coords_scale[[1]], "stop")
-mu_stop <- paral_lengths(p, stop_poly, c(Cx, Cy))
+#shape parameters
+shapeA_poly <- make_poly(template_shapeA$coords_scale, "shape_2")
 
-#other parameters
-kappa_stop <- .3
-sigma_stop <- c(seq(.029, .014, length = 15), seq(.014,.029, length = 15))
-
-#generate probability distribution
-gens_stop <- gen_conts(n_sim = n_gen, mu = mu_stop, kappa = kappa_stop,
-                       sigma = sigma_stop, Cx = Cx, Cy = Cy, thetas = theta)
-stop_prob <- prob_field(polys = gens_stop$polys, nrows = n_grid, ncols = n_grid)
-
-#save shape parameters
-stop_sign <- list("mu" = mu_stop, "kappa" = kappa_stop, "sigma" = sigma_stop, 
-                  "Cx" = Cx, "Cy" = Cy, "theta" = theta)
-save(stop_sign, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/stop_sign.rda")
+l_untrim <- make_l(C = C, theta)
+l <- lapply(l_untrim, function(x){gIntersection(x, shapeA_poly)})
+muA <- sapply(l, function(x){as.numeric(gLength(x))})
+kappaA_1 <- 1
+kappaA_2 <- 2
+kappaA_4 <- 4
+sigmaA <- c(seq(.035, .08, length = floor(p/8)), 
+            seq(.08, .035, length = ceiling(p/8)), rep(.035, p/4),
+            seq(.035, .08, length = floor(p/8)), 
+            seq(.08, .035, length = ceiling(p/8)), rep(.035, p/4))
 
 
-#####################
-#bow tie (non-convex)
-#####################
-#write down coordinates of roughly-desired shape (a bow tie)
-template_tie <- rbind(c(.6, .5), c(.6, .6), c(.5, .55),
-                      c(.4, .6), c(.4, .5), c(.4, .4),
-                      c(.5, .45), c(.6, .4))
-
-#re-scale to take up whole space
-template_tie <- rescale(coords = list(template_tie), eps = .1, box_size = 1)
-
-#make poly and find means
-tie_poly <- make_poly(template_tie$coords_scale[[1]], "tie")
-mu_tie <- paral_lengths(p, tie_poly, c(Cx, Cy))
-
-#other parameters
-kappa_tie <- .1
-sigma_tie <- c(seq(.028, .033, length = 8), seq(.033, .028, length = 7),
-               seq(.028, .033, length = 7), seq(.033, .028, length = 8))
-
-#generate probability distribution
-gens_tie <- gen_conts(n_sim = n_gen, mu = mu_tie, kappa = kappa_tie,
-                      sigma = sigma_tie, Cx = Cx, Cy = Cy, thetas = theta)
-tie_prob <- prob_field(polys = gens_tie$polys, nrows = n_grid, ncols = n_grid)
-
+#generate probability distributions
+gens_shapeA_1 <- gen_conts(n_sim = n_gen, mu = muA, kappa = kappaA_1,
+                         sigma = sigmaA, C, thetas = theta)
+probA_1 <- prob_field(polys = gens_shapeA_1$polys, nrows = n_grid, ncols = n_grid)
+gens_shapeA_2 <- gen_conts(n_sim = n_gen, mu = muA, kappa = kappaA_2,
+                           sigma = sigmaA, C, thetas = theta)
+probA_2 <- prob_field(polys = gens_shapeA_2$polys, nrows = n_grid, ncols = n_grid)
+gens_shapeA_4 <- gen_conts(n_sim = n_gen, mu = muA, kappa = kappaA_4,
+                           sigma = sigmaA, C, thetas = theta)
+probA_4 <- prob_field(polys = gens_shapeA_4$polys, nrows = n_grid, ncols = n_grid)
 
 #save shape parameters
-tie <- list("mu" = mu_tie, "kappa" = kappa_tie, "sigma" = sigma_tie, 
-            "Cx" = Cx, "Cy" = Cy, "theta" = theta)
-save(tie, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/tie.rda")
+shapeA_1 <- list("mu" = muA, "kappa" = kappaA_1, "sigma" = sigmaA, "C" = C, 
+               "theta" = theta)
+shapeA_2 <- list("mu" = muA, "kappa" = kappaA_2, "sigma" = sigmaA, "C" = C, 
+                 "theta" = theta)
+shapeA_4 <- list("mu" = muA, "kappa" = kappaA_4, "sigma" = sigmaA, "C" = C, 
+                 "theta" = theta)
+save(shapeA_1, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_1.rda")
+save(shapeA_2, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_2.rda")
+save(shapeA_4, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_4.rda")
 
 
-##############################
-#star (very non-convex)
-##############################
-#write down coordinates of roughly-desired shape (a stop sign)
-template_tree <- rbind(c(.52, .52), c(.64, .58), c(.53, .55),
-                       c(.5, .6), c(.48, .55), c(.36, .58),
-                       c(.48, .53),c(.36, .52), c(.48, .52), 
-                       c(.36, .48), c(.48, .5),
-                       c(.48, .43), c(.52, .43), c(.52, .5),
-                       c(.64, .48), c(.52, .51), c(.64, .52),
-                       c(.52, .52))
+#########################
+#shape B
+########################
+#coordinates and polygon of mean
+r <- .3
+template_shapeB <- cbind(C[1] + r*cos(theta), C[2] + r*sin(theta))
+shapeB_poly <- make_poly(template_shapeB, "shape_1")
 
-#re-scale to take up whole space
-template_tree <- rescale(coords = list(template_tree), eps = .1, box_size = 1)
+#shape parameters
+l_untrim <- make_l(C = C, theta)
+l <- lapply(l_untrim, function(x){gIntersection(x, shapeB_poly)})
+muB <- sapply(l, function(x){as.numeric(gLength(x))})
+kappaB <- 2
+sigmaB <-  sigmaA
 
-#make poly and find means
-tree_poly <- make_poly(template_tree$coords_scale[[1]], "tree")
-mu_tree <- paral_lengths(p, tree_poly, c(Cx, Cy))
-
-#other parameters
-kappa_tree <- .15
-sigma_tree <- c(seq(.026, .022, length = 10), seq(.022, .023, length = 5), 
-                seq(.023, .02, length = 15))
-                
 
 #generate probability distribution
-gens_tree <- gen_conts(n_sim = n_gen, mu_tree, kappa = kappa_tree,
-                       sigma = sigma_tree,  Cx = Cx, Cy = Cy, theta)
-tree_prob <- prob_field(polys = gens_tree$polys, nrows = n_grid, ncols = n_grid)
+gens_shapeB <- gen_conts(n_sim = n_gen, mu = muB, kappa = kappaB,
+                         sigma = sigmaB, C, thetas = theta)
+probB <- prob_field(polys = gens_shapeB$polys, nrows = n_grid, ncols = n_grid)
 
 #save shape parameters
-tree <- list("mu" = mu_tree, "kappa" = kappa_tree, "sigma" = sigma_tree, 
-            "Cx" = Cx, "Cy" = Cy, "theta" = theta)
-save(tree, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/tree.rda")
+shapeB <- list("mu" = muB, "kappa" = kappaB, "sigma" = sigmaB, "C" = C, 
+               "theta" = theta)
+save(shapeB, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeB.rda")
+
+
+##########################
+#shape C 
+##########################
+#coordinates and polygon of mean
+r <- c(seq(.3, .15, length = 5), seq(.15, .3, length = 5),
+       seq(.29, .15, length = 4), seq(.15, .3, length = 4),
+       seq(.3, .17, length = 6), seq(.17, .32, length = 6),
+       seq(.32, .23, length = 5), seq(.15, .35, length = 5),
+       seq(.36, .17, length = 5), seq(.17, .3, length = 5))
+template_shapeC <- cbind(C[1] + r*cos(theta), C[2] + r*sin(theta))
+
+#shape parameters
+shapeC_poly <- make_poly(template_shapeC, "shape_3")
+l_untrim <- make_l(C = C, theta)
+l <- lapply(l_untrim, function(x){gIntersection(x, shapeC_poly)})
+muC <- sapply(l, function(x){as.numeric(gLength(x))})
+kappa_C <- 2
+sigmaC <- sigmaA
+
+#generate probability distribution
+gens_shapeC <- gen_conts(n_sim = n_gen, mu = muC, kappa = kappa_C,
+                         sigma = sigmaC, C, thetas = theta)
+probC <- prob_field(polys = gens_shapeC$polys, nrows = n_grid, ncols = n_grid)
+
+#save shape parameters
+shapeC <- list("mu" = muC, "kappa" = kappa_C, "sigma" = sigmaC, "C" = C, 
+               "theta" = theta)
+save(shapeC, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeC.rda")
 
 
 ###################
 #shape figures
 ###################
-#pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/sample_shapes_prob.pdf", 
-#    height = 4, width = 8.5)
-set.panel()
-par(oma=c( 0,0,0,4)) # margin of 4 spaces width at right hand side
-set.panel(1,3) 
-image(stop_prob, zlim = c(0, 1),
-           xaxt = "n", yaxt = "n", col = viridis(10),
-           main = "Stop Sign")
-image(tie_prob,  zlim = c(0, 1),
-           xaxt = "n", yaxt = "n", col = viridis(10),
-           main = "Bow Tie")
-image(tree_prob, zlim = c(0, 1),
-           xaxt = "n", yaxt = "n", col = viridis(10),
-           main = "Tree")
-par(oma=c( 0,0,0,1))
+n_demo <- 3
+pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeA.pdf", 
+    height = 2, width = 4)
+layout(matrix(c(1, 2, 3, 10, 10, 10, 4, 5, 6, 10, 10, 10, 7, 8, 9, 10, 10, 10), 
+              byrow = T, ncol = 6))
+par(oma=c(0,2,2,5), mar = c(0, 0, 0, 0)) 
+for (i in 1:n_demo) {
+  plot(gens_shapeA_1$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
+}
+for (i in 1:n_demo) {
+  plot(gens_shapeA_2$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
+}
+for (i in 1:n_demo) {
+  plot(gens_shapeA_4$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
+}
+mtext("Shape A", side = 3, outer = TRUE, font = 1, line = 0)
+mtext(expression(paste(kappa, " = 1 ")), side = 2, at = .85, outer = TRUE, 
+      cex = .75)
+mtext(expression(paste(kappa, " = 2 ")), side = 2, at = .5, outer = TRUE,
+      cex = .75)
+mtext(expression(paste(kappa, " = 5 ")), side = 2, at = .15, outer = TRUE,
+      cex = .75)
+par(mar = rep(1, 4))
+image(probA_1,  zlim = c(0, 1),xlim = c(0, 1), ylim = c(0, 1),
+      xaxt = "n", yaxt = "n", col = viridis(10))
+par(oma=c( 0,0,2,1))
 image.plot(legend.only=TRUE, zlim = c(0,1), col = viridis(10)) 
-#dev.off()
+dev.off()
 
-n_demo <- 15
-#pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/sample_shapes_contours.pdf", height = 4, width = 8.5)
-set.panel(1,3) 
-plot(gens_stop$polys[[1]], lwd = .25, main = "Stop Sign", xlim = c(0, 1), 
-     ylim = c(0, 1))
-for (i in 2:n_demo) {
-  plot(gens_stop$polys[[i]], add = T, lwd = .35)
+pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeB.pdf", 
+    height = 1, width = 3)
+n_demo <- 3
+par(oma=c(.5,0,2,2), mar = c(0, 0, 0, 1), mfrow = c(1, 4)) 
+for (i in 1:n_demo) {
+  plot(gens_shapeB$polys[[i]],  lwd = 1, xlim = c(.1, .9), ylim = c(.1, .9))
 }
-plot(gens_tie$polys[[1]], lwd = .25, main = "Bow Tie", xlim = c(0, 1), 
-     ylim = c(0, 1))
-for (i in 2:n_demo) {
-  plot(gens_tie$polys[[i]], add = T, lwd = .35)
-}
-plot(gens_tree$polys[[1]],  lwd = .25, main = "Tree", xlim = c(0, 1), 
-     ylim = c(0, 1))
-for (i in 2:n_demo) {
-  plot(gens_tree$polys[[i]], add = T, lwd = .35)
-}
-#dev.off()
+image.plot(probB, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
+      xaxt = "n", yaxt = "n", col = viridis(10))
+mtext("Shape B", side = 3, outer = TRUE, font = 1, line = 0.5)
+dev.off()
 
+
+pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeC.pdf", 
+    height = 1, width = 3)
+n_demo <- 3
+par(oma=c(.5,0,2,2), mar = c(0, 0, 0, 1), mfrow = c(1, 4)) 
+for (i in 1:n_demo) {
+  plot(gens_shapeC$polys[[i]],  lwd = 1, xlim = c(.1, .9), ylim = c(.1, .9))
+}
+image.plot(probC, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
+           xaxt = "n", yaxt = "n", col = viridis(10))
+mtext("Shape C", side = 3, outer = TRUE, font = 1, line = 0.5)
+dev.off()
 
