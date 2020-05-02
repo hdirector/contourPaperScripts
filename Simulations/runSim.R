@@ -13,6 +13,7 @@ task <- task_table[task_id,]
 print(sprintf("task_id: %i", task_id))
 attach(task)
 
+
 #credible intervals
 cred_levels <- c(80, 90, 95)
 n_cred <- length(cred_levels)
@@ -32,7 +33,7 @@ box <- bbox()
 bd <- box@polygons[[1]]@Polygons[[1]]@coords
 if (misspec) {
   test <- gen_misspec(n_sim = n_evals, mu = mu_true, kappa = kappa_true,
-                      sigma = sigma_true, C = C_true,thetas = thetas_true, 
+                      sigma = sigma_true, C = C_true, thetas = thetas_true, 
                       r1_min = r1_min, r1_max = r1_max, r2_min = r2_min,
                       r2_max = r2_max, n_curl_min = n_curl_min,
                       n_curl_max = n_curl_max, bd = bd)
@@ -42,14 +43,7 @@ if (misspec) {
                     bd = bd)
 }
 
-#grid of points for possible C
-x_pts <- y_pts <- seq(0, 1, length = n_C_poss)
-C_poss <- SpatialPoints(expand.grid(x_pts, y_pts))
-
-#intial theta's with high p
-theta_space_init <- 2*pi/p_init
-thetas_init <- seq(theta_space_init/2, 2*pi, theta_space_init)
-
+n_evals <- 1
 for (k in 1:n_evals) {
   start_time <- proc.time()  
   #simulate observations
@@ -58,22 +52,18 @@ for (k in 1:n_evals) {
                        sigma = sigma_true, C = C_true,thetas = thetas_true, 
                        r1_min = r1_min, r1_max = r1_max, r2_min = r2_min, 
                        r2_max = r2_max, n_curl_min = n_curl_min,
-                       n_curl_max = n_curl_max, bd = bd)
+                       n_curl_max = n_curl_max, bd = bd, rand_loc = rand_loc)
   } else {
     obs <- gen_conts(n_sim = n_obs, mu = mu_true, kappa = kappa_true,
                      sigma = sigma_true, C = C_true, thetas = thetas_true,
                      bd = bd)
   }
   
-  
   #find estimated center point, p, and theta
-  area_tol <- err_prop*mean(sapply(obs$polys, gArea)) 
-  C_est <- best_C(bd = bd, conts = obs$polys, thetas = thetas_init, 
-                  area_tol = area_tol)
-  p_est <- reduce_p(C = C_est, conts = obs$polys, area_tol = area_tol, p = p_init, 
-                    red_prop = .05)
-  theta_space_est <- 2*pi/p_est
-  thetas_est <- seq(theta_space_est/2, 2*pi, theta_space_est)
+  ests <- find_CP(conts = obs, delta, p_init, space, step, misspec)
+  C_est <- ests$C_est
+  thetas_est <- ests$thetas_est
+  p_est <- length(thetas_est)
   
   #measure and store y
   #Make sets of lines, l, for  C_hat and get y's
@@ -84,46 +74,42 @@ for (k in 1:n_evals) {
   #compute y's
   pts <- lapply(obs$polys, function(x) {pts_on_l(l, x, under = FALSE)})
   y <- sapply(pts, function(x){apply(x, 1, function(y){get_dist(y, C_est)})})
-  #rm(obs) #reduce memory
+  rm(obs) #reduce memory
   
   #initial values for MCMC
   mu_ini <- apply(y, 1, mean)
-  kappa_ini <- .1
+  kappa_ini <- 1
   sigma_ini <-  apply(y, 1, sd)
   
   #priors
   mu0_indiv <- task$mu0
   mu0 <- rep(mu0_indiv, p_est)
-  Lambda0_sigma2 <- task$Lambda0_sigma2
   Lambda0 <- Lambda0_sigma2*diag(p_est) 
-  betaKappa0 <- task$betaKappa0
   betaSigma0 <- rep(task$betaSigma0, p_est)
-  
-  #MCMC set up
-  g_space <- task$g_space
-  g_space <- 1
-  g_start <- seq(1, p_est, by = g_space)
-  g_end <- c(seq(g_space, p_est, by = g_space), p_est)
   
   #non-scaler proposals for MCMC
   theta_dist_est <- theta_dist_mat(thetas_est)
-  sigmaPropCov = sigmaProp_sigma2*compSigma(sigma_ini, kappa_ini, theta_dist_est)
-  muPropCov <- muProp_sigma2*compSigma(sigma_ini, kappa_ini, theta_dist_est)
+  sigmaPropSD = sqrt(diag(sigmaProp_sigma2*compSigma(sigma_ini, kappa_ini, theta_dist_est)))
+  muPropSD <- sqrt(diag(muProp_sigma2*compSigma(sigma_ini, kappa_ini, theta_dist_est)))
   
   #run MCMC
-  fits <- ContouR::RunMCMC(nIter = n_iter, y,
-                           mu = mu_ini, mu0 = mu0, Lambda0, muPropCov,
-                           kappa = kappa_ini, betaKappa0, kappaProp_SD,
-                           sigma = sigma_ini, betaSigma0 = betaSigma0, sigmaPropCov,
-                           gStart = g_start - 1, gEnd = g_end - 1,
-                           thetaDist = theta_dist_est)
+  start_time <- proc.time()
+  fits <- RunMCMC(nIter = n_iter, y,
+                  mu = mu_ini, mu0 = mu0, Lambda0, muPropSD = muPropSD,
+                  kappa = kappa_ini, betaKappa0, kappaProp_SD,
+                  sigma = sigma_ini, betaSigma0 = betaSigma0, 
+                  sigmaPropSD = sigmaPropSD,
+                  thetaDist = theta_dist_est)
+  end_time <- proc.time()
+  run_time <- end_time - start_time
+  print(sprintf("fitted eval %i, time: %s", k, run_time[3]))
   
   #parameter estimates
   mu_est <- apply(fits$mu[,(burn_in + 1):n_iter], 1, mean)
   kappa_est <- mean(fits$kappa[(burn_in + 1):n_iter])
   sigma_est <- apply(fits$sigma[,(burn_in + 1):n_iter],1, mean)
-  #rm(fits) #reduce memory
-  
+  rm(fits) #reduce memory
+ 
   #posterior field
   gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est,
                     sigma = sigma_est, C = C_est, thetas = thetas_est, bd = bd)
@@ -133,20 +119,25 @@ for (k in 1:n_evals) {
   #find credible intervals and compute coverage
   creds <- cred_regs(prob, cred_eval = cred_levels, nrows = n_grid, 
                      ncols = n_grid)
-  #rm(prob) #reduce memory
+  
+  #compute theta's to evaluate
+  theta_space_eval <- 2*pi/p_eval
+  thetas_eval <- seq(theta_space_eval/2, 2*pi, by = theta_space_eval)
+  
   if (k != 1) {
     cover <- cover + sapply(creds, 
                             function(x){eval_cred_reg(truth = test$polys[[k]],
                                                       cred_reg = x, 
                                                       center = C_true, 
-                                                      p_test = p_test,
-                                                      nrows = n_grid, ncols = n_grid)})
+                                                      thetas = thetas_eval,
+                                                      nrows = n_grid, 
+                                                      ncols = n_grid)})
   } else {
     cover <- sapply(creds, 
                     function(x){eval_cred_reg(truth = test$polys[[k]],
                                               cred_reg = x, 
                                               center = C_true, 
-                                              p_test = p_test,
+                                              thetas = thetas_eval,
                                               nrows = n_grid, ncols = n_grid)})
   }
   #rm(creds) #reduce memory
@@ -162,11 +153,13 @@ if (task_name == "nObsnGen") {
   file_name <- sprintf("%s_id%i_%s_obs%i_gen%i", task_name, task_id, shape_name, 
                        n_obs, n_gen)
 } else if (task_name == "variedP") {
-  file_name <- sprintf("%s_id%i_%s_pProp%f", task_name, task_id, shape_name, 
-                       err_prop)
+  file_name <- sprintf("%s_id%i_%s_delta%f", task_name, task_id, shape_name, 
+                       delta)
 } else if (task_name == "misspec") {
   file_name <- sprintf("%s_id%i_%s_nCurlMin%i", task_name, task_id, shape_name,
                        n_curl_min)
+} else if (task_name == "shapes") {
+  file_name <- sprintf("%s_id%i_%s", task_name, task_id, shape_name)
 }
 save(res_cover, 
      file = sprintf("/homes/direch/contours/Simulations/sim_results/%s/%s.rda", task_name, file_name))
