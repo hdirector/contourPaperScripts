@@ -1,6 +1,6 @@
 #Assess coverage under particular conditions
 rm(list = ls())
-set.seed(103)
+set.seed(104)
 library("ContouR")
 
 #Read in arguments
@@ -43,7 +43,10 @@ if (misspec) {
                     bd = bd)
 }
 
-n_evals <- 1
+#storage for p_est and C_est
+p_est_store <- rep(NA, n_evals)
+C_est_store <- matrix(nrow = n_evals, ncol = 2, data = NA)
+
 for (k in 1:n_evals) {
   start_time <- proc.time()  
   #simulate observations
@@ -64,7 +67,9 @@ for (k in 1:n_evals) {
   C_est <- ests$C_est
   thetas_est <- ests$thetas_est
   p_est <- length(thetas_est)
-  
+  C_est_store[k,] <- C_est
+  p_est_store[k] <- p_est
+
   #measure and store y
   #Make sets of lines, l, for  C_hat and get y's
   l_untrim <- make_l(C = C_est, thetas_est)
@@ -114,7 +119,7 @@ for (k in 1:n_evals) {
   gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est,
                     sigma = sigma_est, C = C_est, thetas = thetas_est, bd = bd)
   prob <- prob_field(polys = gens$polys, nrows = n_grid, ncols = n_grid)
-  #rm(gens) #reduce memory
+  rm(gens) #reduce memory
   
   #find credible intervals and compute coverage
   creds <- cred_regs(prob, cred_eval = cred_levels, nrows = n_grid, 
@@ -140,7 +145,7 @@ for (k in 1:n_evals) {
                                               thetas = thetas_eval,
                                               nrows = n_grid, ncols = n_grid)})
   }
-  #rm(creds) #reduce memory
+  rm(creds) #reduce memory
   end_time <- proc.time()
   elapse_time <- end_time  - start_time
   print(sprintf("Eval %i completed for task_id %i", k, task_id))
@@ -161,5 +166,5 @@ if (task_name == "nObsnGen") {
 } else if (task_name == "shapes") {
   file_name <- sprintf("%s_id%i_%s", task_name, task_id, shape_name)
 }
-save(res_cover, 
-     file = sprintf("/homes/direch/contours/Simulations/sim_results/%s/%s.rda", task_name, file_name))
+res <- list("res_cover" = res_cover, "p_est" = p_est_store, "C_est" = C_est_store)
+save(res, file = sprintf("/homes/direch/contours/Simulations/sim_results/%s/%s.rda", task_name, file_name))
