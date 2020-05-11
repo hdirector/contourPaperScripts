@@ -59,9 +59,9 @@ shapeA_2 <- list("mu" = muA, "kappa" = kappaA_2, "sigma" = sigmaA, "C" = C,
                  "theta" = theta)
 shapeA_4 <- list("mu" = muA, "kappa" = kappaA_4, "sigma" = sigmaA, "C" = C, 
                  "theta" = theta)
-save(shapeA_1, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_1.rda")
-save(shapeA_2, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_2.rda")
-save(shapeA_4, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_4.rda")
+#save(shapeA_1, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_1.rda")
+#save(shapeA_2, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_2.rda")
+#save(shapeA_4, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeA_4.rda")
 
 
 #########################
@@ -88,7 +88,7 @@ probB <- prob_field(polys = gens_shapeB$polys, nrows = n_grid, ncols = n_grid)
 #save shape parameters
 shapeB <- list("mu" = muB, "kappa" = kappaB, "sigma" = sigmaB, "C" = C, 
                "theta" = theta)
-save(shapeB, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeB.rda")
+#save(shapeB, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeB.rda")
 
 
 ##########################
@@ -116,17 +116,17 @@ gens_shapeC <- gen_conts(n_sim = n_gen, mu = muC, kappa = kappa_C,
 probC <- prob_field(polys = gens_shapeC$polys, nrows = n_grid, ncols = n_grid)
 
 #save shape parameters
-shapeC <- list("mu" = muC, "kappa" = kappa_C, "sigma" = sigmaC, "C" = C, 
+#shapeC <- list("mu" = muC, "kappa" = kappa_C, "sigma" = sigmaC, "C" = C, 
                "theta" = theta)
-save(shapeC, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeC.rda")
+#save(shapeC, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeC.rda")
 
 
 ###################
 #shape figures
 ###################
-n_demo <- 3
-pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeA.pdf", 
-    height = 2, width = 4)
+#n_demo <- 3
+#pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeA.pdf", 
+#    height = 2, width = 4)
 layout(matrix(c(1, 2, 3, 10, 10, 10, 4, 5, 6, 10, 10, 10, 7, 8, 9, 10, 10, 10), 
               byrow = T, ncol = 6))
 par(oma=c(0,2,2,5), mar = c(0, 0, 0, 0)) 
@@ -151,10 +151,10 @@ image(probA_1,  zlim = c(0, 1),xlim = c(0, 1), ylim = c(0, 1),
       xaxt = "n", yaxt = "n", col = viridis(10))
 par(oma=c( 0,0,2,1))
 image.plot(legend.only=TRUE, zlim = c(0,1), col = viridis(10)) 
-dev.off()
+#dev.off()
 
-pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeB.pdf", 
-    height = 1, width = 3)
+#pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeB.pdf", 
+#    height = 1, width = 3)
 n_demo <- 3
 par(oma=c(.5,0,2,2), mar = c(0, 0, 0, 1), mfrow = c(1, 4)) 
 for (i in 1:n_demo) {
@@ -163,11 +163,11 @@ for (i in 1:n_demo) {
 image.plot(probB, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
       xaxt = "n", yaxt = "n", col = viridis(10))
 mtext("Shape B", side = 3, outer = TRUE, font = 1, line = 0.5)
-dev.off()
+#dev.off()
 
 
-pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeC.pdf", 
-    height = 1, width = 3)
+#pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeC.pdf", 
+#    height = 1, width = 3)
 n_demo <- 3
 par(oma=c(.5,0,2,2), mar = c(0, 0, 0, 1), mfrow = c(1, 4)) 
 for (i in 1:n_demo) {
@@ -176,5 +176,35 @@ for (i in 1:n_demo) {
 image.plot(probC, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
            xaxt = "n", yaxt = "n", col = viridis(10))
 mtext("Shape C", side = 3, outer = TRUE, font = 1, line = 0.5)
+#dev.off()
+
+pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapesAll.pdf", 
+    height = 2, width = 2)
+par(oma=c(0,0,0,0), mar = c(0, 0, .8, 0), mfrow = c(1, 4)) 
+par(mfrow = c(3, 3))
+plot(gens_shapeA_2$polys[[1]], lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85),
+     main = "Shape A", cex.main = .8)
+plot(gens_shapeB$polys[[1]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85),
+     main = "Shape B", cex.main = .8)
+plot(gens_shapeC$polys[[1]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85),
+     main = "Shape C", cex.main = .8)
+plot(gens_shapeA_2$polys[[2]], lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+plot(gens_shapeB$polys[[2]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+plot(gens_shapeC$polys[[2]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+plot(gens_shapeA_2$polys[[3]], lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+plot(gens_shapeB$polys[[3]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+plot(gens_shapeC$polys[[3]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
 dev.off()
+
+pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/probFields.pdf", 
+    height = 1.5, width = 4)
+par(oma=c(0,0,0,.5), mar = c(1, 1, 1, 1), mfrow = c(1, 3)) 
+image.plot(probA_2, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
+           xaxt = "n", yaxt = "n", col = viridis(10))
+image.plot(probB, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
+           xaxt = "n", yaxt = "n", col = viridis(10))
+image.plot(probC, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
+           xaxt = "n", yaxt = "n", col = viridis(10))
+dev.off()
+
 
