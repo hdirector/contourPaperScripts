@@ -1,10 +1,10 @@
 #########################################################################
-#Simulate varied num obs, num gen, and correlation kappa
+#Simulate varied num obs, num gen, and correlation kappa, seed 103
 #########################################################################
 #varied settings
-n_obs <- c(10, 20, 50, 100)
+n_obs <- c(10, 20, 50)
 n_gen <- 100
-shape_name <- c("shapeA_1", "shapeA_2", "shapeA_4")
+shape_name <- c("shapeA_2")
 task_table <- as.data.frame(expand.grid(n_obs, n_gen, shape_name))
 colnames(task_table) <- c("n_obs", "n_gen", "shape_name")
 n_case <- nrow(task_table)
@@ -13,8 +13,8 @@ n_case <- nrow(task_table)
 task_table$under <- rep(TRUE, n_case)
 task_table$p_eval <- rep(100, n_case)
 task_table$p_true <- rep(50, n_case)
-task_table$p_init <- rep(46, n_case)
-task_table$n_evals <- rep(50, n_case) 
+task_table$p_init <- rep(44, n_case)
+task_table$n_evals <- rep(40, n_case) 
 task_table$n_grid <- rep(200, n_case)
 task_table$mu0 <- rep(.2, n_case)
 task_table$Lambda0_sigma2 <- rep(.05, n_case)
@@ -25,7 +25,7 @@ task_table$burn_in <- rep(15000, n_case)
 task_table$sigmaProp_sigma2 <- rep(.05, n_case)
 task_table$muProp_sigma2 <- rep(.05, n_case)
 task_table$kappaProp_SD <- rep(.3, n_case)
-task_table$delta <- rep(.01, n_case)
+task_table$delta <- rep(.02, n_case)
 task_table$space <- rep(.01, n_case)
 task_table$step <- rep(.05, n_case)
 task_table$misspec <- rep(FALSE, n_case)
@@ -41,11 +41,11 @@ save(task_table,
 
 
 ######################################################
-#Use different delta's 
+#Use different delta's, seed 104
 ######################################################
 #varied settings
-delta <- c(.05, .025, .01)
-shape_name <- c("shapeA_2")
+delta <- c(.03, .02, .01)
+shape_name <- c("shapeA_1", "shapeA_2", "shapeA_4")
 task_table <- as.data.frame(expand.grid(delta, shape_name))
 colnames(task_table) <- c("delta",  "shape_name")
 n_case <- nrow(task_table)
@@ -56,8 +56,8 @@ task_table$n_obs <- rep(20, n_case)
 task_table$n_gen <- rep(100, n_case)
 task_table$p_eval <- rep(100, n_case)
 task_table$p_true <- rep(50, n_case)
-task_table$p_init <- rep(30, n_case)
-task_table$n_evals <- rep(50, n_case) 
+task_table$p_init <- c(30, 38, 46, 30, 38, 46,  27, 34, 44)
+task_table$n_evals <- rep(40, n_case) 
 task_table$n_grid <- rep(200, n_case) 
 task_table$mu0 <- rep(.2, n_case)
 task_table$Lambda0_sigma2 <- rep(.05, n_case)
@@ -84,7 +84,7 @@ save(task_table,
      file = '/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/variedPTaskTable.rda')
 
 #############################################
-#Simulate fits under model misspecification
+#Simulate fits under model misspecification, seed 104
 #############################################
 #varied settings
 shape_name <- c("shapeA_2")
@@ -101,8 +101,8 @@ task_table$n_obs <- rep(20, n_case)
 task_table$n_gen <- rep(100, n_case)
 task_table$p_true <- rep(50, n_case)
 task_table$p_eval <- rep(100, n_case)
-task_table$p_init <- rep(46, n_case)
-task_table$n_evals <- rep(50, n_case)
+task_table$p_init <- rep(50, n_case)
+task_table$n_evals <- rep(40, n_case)
 task_table$n_grid <- rep(200, n_case)
 task_table$mu0 <- rep(.2, n_case)
 task_table$Lambda0_sigma2 <- rep(.05, n_case)
@@ -113,9 +113,9 @@ task_table$burn_in <- rep(15000, n_case)
 task_table$sigmaProp_sigma2 <- rep(.05, n_case)
 task_table$muProp_sigma2 <- rep(.05, n_case)
 task_table$kappaProp_SD <- rep(.3, n_case)
-task_table$delta <- rep(.03, n_case)
+task_table$delta <- rep(NA, 6)
 task_table$misspec <- rep(TRUE, n_case)
-task_table$space <- rep(.01, n_case)
+task_table$space <- rep(.02, n_case)
 task_table$step <- rep(.05, n_case)
 task_table$r1_min <- rep(0.05, n_case)
 task_table$r1_max <- rep(.075, n_case)
@@ -126,7 +126,7 @@ save(task_table,
      file = '/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/misspecTaskTable.rda')
 
 #################################
-#look at different shapes
+#look at different shapes, seed 103
 #################################
 #varied settings
 task_table <- data.frame(shape_name =  c("shapeA_2", "shapeB", "shapeC"))
@@ -138,8 +138,8 @@ task_table$n_obs <- rep(20, n_case)
 task_table$n_gen <- rep(100, n_case)
 task_table$p_true <- rep(50, n_case)
 task_table$p_eval <- rep(100, n_case)
-task_table$p_init <- rep(46, n_case)
-task_table$n_evals <- rep(50, n_case)
+task_table$p_init <- rep(44, n_case)
+task_table$n_evals <- rep(40, n_case)
 task_table$n_grid <- rep(200, n_case)
 task_table$mu0 <- rep(.2, n_case)
 task_table$Lambda0_sigma2 <- rep(.05, n_case)
@@ -150,7 +150,7 @@ task_table$burn_in <- rep(15000, n_case)
 task_table$sigmaProp_sigma2 <- rep(.05, n_case)
 task_table$muProp_sigma2 <- rep(.05, n_case)
 task_table$kappaProp_SD <- rep(.3, n_case)
-task_table$delta <- rep(.01, n_case)
+task_table$delta <- rep(.02, n_case)
 task_table$space <- rep(.01, n_case)
 task_table$step <- rep(.05, n_case)
 task_table$misspec <- rep(FALSE, n_case)
