@@ -5,15 +5,17 @@ library("ContouR")
 library("coda")
 
 #Read in simulation settings
-task_id <- 3
-task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/shapesTaskTable.rda"
+task_id <- 1
+task_name <- "misspec"
+#task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/shapesTaskTable.rda"
 #task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/variedPTaskTable.rda"
 #task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/nObsnGenTaskTable.rda"
-#task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/misspecTaskTable.rda"
+task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/misspecTaskTable.rda"
 load(task_path)
 task <- task_table[task_id,]
 print(sprintf("task_id: %i", task_id))
 attach(task)
+
 
 #credible intervals
 cred_levels <- c(80, 90, 95)
@@ -37,12 +39,16 @@ if (misspec) {
                       sigma = sigma_true, C = C_true, thetas = thetas_true, 
                       r1_min = r1_min, r1_max = r1_max, r2_min = r2_min,
                       r2_max = r2_max, n_curl_min = n_curl_min,
-                      n_curl_max = n_curl_max, bd = bd)
+                      n_curl_max = n_curl_max, bd = bd,  rand_loc = rand_loc)
 } else {
   test <- gen_conts(n_sim = n_evals, mu = mu_true, kappa = kappa_true,
                     sigma = sigma_true, C = C_true, thetas = thetas_true, 
                     bd = bd)
 }
+
+#storage for p_est and C_est
+p_est_store <- rep(NA, n_evals)
+C_est_store <- matrix(nrow = n_evals, ncol = 2, data = NA)
 
 for (k in 1:n_evals) {
   start_time <- proc.time()  
@@ -59,13 +65,21 @@ for (k in 1:n_evals) {
                      bd = bd)
   }
   
-  
   #find estimated center point, p, and theta
-  ests <- find_CP(conts = obs, delta, p_init, space, step, misspec,
-                  parallel = TRUE)
-  C_est <- ests$C_est
-  thetas_est <- ests$thetas_est
-  p_est <- ests$p_est
+  if (!misspec) {
+    ests <- find_CP(conts = obs, delta, p_init, space, step, misspec)
+    C_est <- ests$C_est
+    thetas_est <- ests$thetas_est
+    p_est <- length(thetas_est)
+  } else {
+    p_est <- p_init
+    theta_space_est <- 2*pi/p_est
+    thetas_est <- seq(theta_space_est/2, 2*pi, theta_space_est)
+    C_est <- best_C(bd = bd, conts = obs$polys, thetas = thetas_est,
+                    space = space)
+  }
+  C_est_store[k,] <- C_est
+  p_est_store[k] <- p_est
   
   #measure and store y
   #Make sets of lines, l, for  C_hat and get y's
@@ -76,11 +90,11 @@ for (k in 1:n_evals) {
   #compute y's
   pts <- lapply(obs$polys, function(x) {pts_on_l(l, x, under = FALSE)})
   y <- sapply(pts, function(x){apply(x, 1, function(y){get_dist(y, C_est)})})
-  #rm(obs) #reduce memory
+  rm(obs) #reduce memory
   
   #initial values for MCMC
   mu_ini <- apply(y, 1, mean)
-  kappa_ini <- 3
+  kappa_ini <- 1
   sigma_ini <-  apply(y, 1, sd)
   
   #priors
@@ -110,42 +124,13 @@ for (k in 1:n_evals) {
   mu_est <- apply(fits$mu[,(burn_in + 1):n_iter], 1, mean)
   kappa_est <- mean(fits$kappa[(burn_in + 1):n_iter])
   sigma_est <- apply(fits$sigma[,(burn_in + 1):n_iter],1, mean)
-  #rm(fits) #reduce memory
+  rm(fits) #reduce memory
   
-  par(mfrow = c(1, 3))
-  Sigma_obs <- cov(t(y))
-  Sigma_ini <- compSigma(sigma_ini, kappa_ini, theta_dist_est)
-  Sigma_est <- compSigma(sigma_est, kappa_est, theta_dist_est)
-  Sigma_true <- compSigma(sigma_true, kappa_true, theta_dist_est)
-  image.plot(Sigma_est, zlim  = c(0, .007))
-  image.plot(Sigma_obs, zlim = c(0, .007))
-  image.plot(Sigma_true, zlim = c(0, .007))
-
-  par(mfrow = c(1, 1))
-  plot(sigma_est, type= "l")
-  points(sigma_ini, type= "l", col = "blue")
-  points(sigma_true, type= "l", col = 'red')
-  points(betaSigma0, type = "l", lty = 2)
-  plot(mu_est, type= "l")
-  points(mu_ini, col= 'blue', type= "l")
-  points(mu_true, type= 'l',col = 'red')
-
-  # #check MCMC diagnostic
-  # N_sigma <- N_mu <- rep(NA, p_est)
-  # for (i in 1:p_est) {
-  #   N_sigma[i] <- max(raftery.diag(fits$sigma[i,], q = .025, r = .0125)$resmatrix[,"N"],
-  #                     raftery.diag(fits$sigma[i,], q = .975, r = .0125)$resmatrix[,"N"])
-  #   N_mu[i] <- max(raftery.diag(fits$mu[i,], q = .025, r = .0125)$resmatrix[,"N"],
-  #                   raftery.diag(fits$mu[i,], q = .975, r = .0125)$resmatrix[,"N"])
-  # }
-  # N_kappa <- max(raftery.diag(fits$kappa, q = .025, r = .0125)$resmatrix[,"N"],
-  #                raftery.diag(fits$kappa, q = .975, r = .0125)$resmatrix[,"N"])
-
   #posterior field
   gens <- gen_conts(n_sim = n_gen, mu = mu_est, kappa = kappa_est,
                     sigma = sigma_est, C = C_est, thetas = thetas_est, bd = bd)
   prob <- prob_field(polys = gens$polys, nrows = n_grid, ncols = n_grid)
-  #rm(gens) #reduce memory
+  rm(gens) #reduce memory
   
   #find credible intervals and compute coverage
   creds <- cred_regs(prob, cred_eval = cred_levels, nrows = n_grid, 
@@ -155,7 +140,6 @@ for (k in 1:n_evals) {
   theta_space_eval <- 2*pi/p_eval
   thetas_eval <- seq(theta_space_eval/2, 2*pi, by = theta_space_eval)
   
-  par(mfrow = c(1, 3))
   if (k != 1) {
     cover <- cover + sapply(creds, 
                             function(x){eval_cred_reg(truth = test$polys[[k]],
@@ -163,19 +147,16 @@ for (k in 1:n_evals) {
                                                       center = C_true, 
                                                       thetas = thetas_eval,
                                                       nrows = n_grid, 
-                                                      ncols = n_grid,
-                                                      plotting = TRUE)})
-    k <- k + 1
+                                                      ncols = n_grid)})
   } else {
     cover <- sapply(creds, 
                     function(x){eval_cred_reg(truth = test$polys[[k]],
                                               cred_reg = x, 
                                               center = C_true, 
                                               thetas = thetas_eval,
-                                              nrows = n_grid, ncols = n_grid,
-                                              plotting = TRUE)})
+                                              nrows = n_grid, ncols = n_grid)})
   }
-  #rm(creds) #reduce memory
+  rm(creds) #reduce memory
   end_time <- proc.time()
   elapse_time <- end_time  - start_time
   print(sprintf("Eval %i completed for task_id %i", k, task_id))
@@ -185,7 +166,7 @@ for (k in 1:n_evals) {
 #save results
 res_cover <- list("task" = task, "cover" = cover)
 if (task_name == "nObsnGen") {
-  file_name <- sprintf("%s_id%i_%s_obs%i_gen%i", task_name, task_id, shape_name,
+  file_name <- sprintf("%s_id%i_%s_obs%i_gen%i", task_name, task_id, shape_name, 
                        n_obs, n_gen)
 } else if (task_name == "variedP") {
   file_name <- sprintf("%s_id%i_%s_delta%f", task_name, task_id, shape_name, 
@@ -193,5 +174,8 @@ if (task_name == "nObsnGen") {
 } else if (task_name == "misspec") {
   file_name <- sprintf("%s_id%i_%s_nCurlMin%i", task_name, task_id, shape_name,
                        n_curl_min)
+} else if (task_name == "shapes") {
+  file_name <- sprintf("%s_id%i_%s", task_name, task_id, shape_name)
 }
-
+res <- list("res_cover" = res_cover, "p_est" = p_est_store, "C_est" = C_est_store)
+save(res, file = sprintf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/sim_results/%s/%s.rda", task_name, file_name))

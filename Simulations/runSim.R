@@ -1,6 +1,6 @@
 #Assess coverage under particular conditions
 rm(list = ls())
-set.seed(104)
+set.seed(101)
 library("ContouR")
 
 #Read in arguments
@@ -12,7 +12,6 @@ load(task_path)
 task <- task_table[task_id,]
 print(sprintf("task_id: %i", task_id))
 attach(task)
-
 
 #credible intervals
 cred_levels <- c(80, 90, 95)
@@ -36,7 +35,7 @@ if (misspec) {
                       sigma = sigma_true, C = C_true, thetas = thetas_true, 
                       r1_min = r1_min, r1_max = r1_max, r2_min = r2_min,
                       r2_max = r2_max, n_curl_min = n_curl_min,
-                      n_curl_max = n_curl_max, bd = bd)
+                      n_curl_max = n_curl_max, bd = bd,  rand_loc = rand_loc)
 } else {
   test <- gen_conts(n_sim = n_evals, mu = mu_true, kappa = kappa_true,
                     sigma = sigma_true, C = C_true, thetas = thetas_true, 
@@ -63,10 +62,18 @@ for (k in 1:n_evals) {
   }
   
   #find estimated center point, p, and theta
-  ests <- find_CP(conts = obs, delta, p_init, space, step, misspec)
-  C_est <- ests$C_est
-  thetas_est <- ests$thetas_est
-  p_est <- length(thetas_est)
+  if (!misspec) {
+	ests <- find_CP(conts = obs, delta, p_init, space, step, misspec)
+	C_est <- ests$C_est
+	thetas_est <- ests$thetas_est
+	p_est <- length(thetas_est)
+  } else {
+    p_est <- p_init
+    theta_space_est <- 2*pi/p_est
+    thetas_est <- seq(theta_space_est/2, 2*pi, theta_space_est)
+    C_est <- best_C(bd = bd, conts = obs$polys, thetas = thetas_est,
+                    space = space)
+  }
   C_est_store[k,] <- C_est
   p_est_store[k] <- p_est
 
