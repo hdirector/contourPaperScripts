@@ -3,7 +3,7 @@ task_path <- "/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Simulations/
 
 load(task_path)
 n_tasks <- nrow(task_table)
-n_eval <- 50
+n_eval <- 40
 
 res_shapes <- data.frame("mean_A" = rep(NA, 3), "sd_A" = rep(NA, 3),
                           "mean_B" = rep(NA, 3), "sd_B" = rep(NA, 3),
@@ -27,4 +27,4 @@ for (i in 1:n_tasks) {
 rownames(res_shapes) <- c("0.8", "0.9", "0.95")
 
 library("xtable")
-xtable(res_shapes, digits = 3)
+xtable(res_shapes, digits = 2)

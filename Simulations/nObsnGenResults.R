@@ -36,4 +36,4 @@ for (i in 1:n_tasks) {
 }
 
 library("xtable")
-xtable(sum_table, digits = 3)
+xtable(sum_table, digits = 2)
