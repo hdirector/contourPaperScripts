@@ -45,8 +45,8 @@ for (i in secs) {
   centers <- rbind(centers, c(x_temp, y_temp))
 }
 n_centers <- nrow(centers)
-points(rbind(centers, centers[1,]), col = 'red', type = 'l', lwd = 1.5)
-points(frac, type= 'l', lwd = 2)
+points(rbind(centers, centers[1,]), col = 'red', type = 'l', lwd = 1)
+points(frac, type= 'l', lwd = 1)
 
 #compute star-shaped approximation to centers
 frac_cont <- list()
@@ -61,7 +61,7 @@ C_est <- best_C(bd = bd, conts = frac_cont, thetas = thetas, space = .04,
                 parallel = TRUE)
 centers_star <- error_areas(conts = centers_cont, C = C_est, thetas = thetas,
                             under = FALSE, ret_all = TRUE)
-plot(centers_star$approxs[[1]], add = T, border = 'purple', lwd = 1.5)
+plot(centers_star$approxs[[1]], add = T, border = 'purple', lwd = 1)
 
 diff_area <- gArea(gDifference(centers_star$approxs[[1]], frac_cont[[1]])) + 
   gArea(gDifference(frac_cont[[1]], centers_star$approxs[[1]]))
@@ -72,9 +72,9 @@ diff_area/gArea(frac_cont[[1]])
 n_zoom <- 64
 plot(frac[1:n_zoom,], type= 'l', xaxt = "n", yaxt = "n",
      xlab = "", ylab = '', xlim = c(.07, .37), ylim = c(.68, .79),
-     bty = 'n', lwd = 2)
+     bty = 'n')
 cent_ind <- c(n_centers, 1:(n_zoom/space + 1))
-points(centers[cent_ind,], col = 'red', type = 'l', lwd = 1.5)
+points(centers[cent_ind,], col = 'red', type = 'l', lwd = 1)
 points(centers[cent_ind,], col = 'blue', pch = 15, cex = .8)
 for (i in cent_ind) {
   points(circle_pts(centers[i,1], centers[i,2], delta = delta), type= 'l', 
@@ -82,7 +82,7 @@ for (i in cent_ind) {
 }
 points(centers_star$approxs[[1]]@polygons[[1]]@Polygons[[1]]@coords[120:135,],
        col = 'purple', type= 'l')
-points(frac[1:n_zoom,], type= 'l', lwd = 2)
+points(frac[1:n_zoom,], type= 'l')
 plot(0,0, col = 'white', bty = "n", xaxt = "n", yaxt = "n", ylab = "", xlab = "")
 legend("center", legend = c(expression(paste("fractal contour (", bold("F"), ")")), 
                             expression(paste(bold(delta), "-cover ({U})")),
