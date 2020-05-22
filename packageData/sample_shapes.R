@@ -117,83 +117,92 @@ probC <- prob_field(polys = gens_shapeC$polys, nrows = n_grid, ncols = n_grid)
 
 #save shape parameters
 #shapeC <- list("mu" = muC, "kappa" = kappa_C, "sigma" = sigmaC, "C" = C, 
-               "theta" = theta)
+#               "theta" = theta)
 #save(shapeC, file = "/Users/hdirector/Dropbox/Contours/ContouR/data/shapeC.rda")
 
 
 ###################
 #shape figures
 ###################
-#n_demo <- 3
+n_demo <- 3
 #pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeA.pdf", 
 #    height = 2, width = 4)
-layout(matrix(c(1, 2, 3, 10, 10, 10, 4, 5, 6, 10, 10, 10, 7, 8, 9, 10, 10, 10), 
-              byrow = T, ncol = 6))
-par(oma=c(0,2,2,5), mar = c(0, 0, 0, 0)) 
-for (i in 1:n_demo) {
-  plot(gens_shapeA_1$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
-}
-for (i in 1:n_demo) {
-  plot(gens_shapeA_2$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
-}
-for (i in 1:n_demo) {
-  plot(gens_shapeA_4$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
-}
-mtext("Shape A", side = 3, outer = TRUE, font = 1, line = 0)
-mtext(expression(paste(kappa, " = 1 ")), side = 2, at = .85, outer = TRUE, 
-      cex = .75)
-mtext(expression(paste(kappa, " = 2 ")), side = 2, at = .5, outer = TRUE,
-      cex = .75)
-mtext(expression(paste(kappa, " = 5 ")), side = 2, at = .15, outer = TRUE,
-      cex = .75)
-par(mar = rep(1, 4))
-image(probA_1,  zlim = c(0, 1),xlim = c(0, 1), ylim = c(0, 1),
-      xaxt = "n", yaxt = "n", col = viridis(10))
-par(oma=c( 0,0,2,1))
-image.plot(legend.only=TRUE, zlim = c(0,1), col = viridis(10)) 
-#dev.off()
-
-#pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeB.pdf", 
-#    height = 1, width = 3)
-n_demo <- 3
-par(oma=c(.5,0,2,2), mar = c(0, 0, 0, 1), mfrow = c(1, 4)) 
-for (i in 1:n_demo) {
-  plot(gens_shapeB$polys[[i]],  lwd = 1, xlim = c(.1, .9), ylim = c(.1, .9))
-}
-image.plot(probB, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
-      xaxt = "n", yaxt = "n", col = viridis(10))
-mtext("Shape B", side = 3, outer = TRUE, font = 1, line = 0.5)
-#dev.off()
+# layout(matrix(c(1, 2, 3, 10, 10, 10, 4, 5, 6, 10, 10, 10, 7, 8, 9, 10, 10, 10), 
+#               byrow = T, ncol = 6))
+# par(oma=c(0,2,2,5), mar = c(0, 0, 0, 0)) 
+# for (i in 1:n_demo) {
+#   plot(gens_shapeA_1$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
+# }
+# for (i in 1:n_demo) {
+#   plot(gens_shapeA_2$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
+# }
+# for (i in 1:n_demo) {
+#   plot(gens_shapeA_4$polys[[i]], lwd = .35, xlim = c(.1, .9), ylim = c(.1, .9))
+# }
+# mtext("Shape A", side = 3, outer = TRUE, font = 1, line = 0)
+# mtext(expression(paste(kappa, " = 1 ")), side = 2, at = .85, outer = TRUE, 
+#       cex = .75)
+# mtext(expression(paste(kappa, " = 2 ")), side = 2, at = .5, outer = TRUE,
+#       cex = .75)
+# mtext(expression(paste(kappa, " = 5 ")), side = 2, at = .15, outer = TRUE,
+#       cex = .75)
+# par(mar = rep(1, 4))
+# image(probA_1,  zlim = c(0, 1),xlim = c(0, 1), ylim = c(0, 1),
+#       xaxt = "n", yaxt = "n", col = viridis(10))
+# par(oma=c( 0,0,2,1))
+# image.plot(legend.only=TRUE, zlim = c(0,1), col = viridis(10)) 
+# #dev.off()
+# 
+# #pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeB.pdf", 
+# #    height = 1, width = 3)
+# n_demo <- 3
+# par(oma=c(.5,0,2,2), mar = c(0, 0, 0, 1), mfrow = c(1, 4)) 
+# for (i in 1:n_demo) {
+#   plot(gens_shapeB$polys[[i]],  lwd = 1, xlim = c(.1, .9), ylim = c(.1, .9))
+# }
+# image.plot(probB, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
+#       xaxt = "n", yaxt = "n", col = viridis(10))
+# mtext("Shape B", side = 3, outer = TRUE, font = 1, line = 0.5)
+# #dev.off()
 
 
 #pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapeC.pdf", 
 #    height = 1, width = 3)
-n_demo <- 3
-par(oma=c(.5,0,2,2), mar = c(0, 0, 0, 1), mfrow = c(1, 4)) 
-for (i in 1:n_demo) {
-  plot(gens_shapeC$polys[[i]],  lwd = 1, xlim = c(.1, .9), ylim = c(.1, .9))
-}
-image.plot(probC, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
-           xaxt = "n", yaxt = "n", col = viridis(10))
-mtext("Shape C", side = 3, outer = TRUE, font = 1, line = 0.5)
+# n_demo <- 3
+# par(oma=c(.5,0,2,2), mar = c(0, 0, 0, 1), mfrow = c(1, 4)) 
+# for (i in 1:n_demo) {
+#   plot(gens_shapeC$polys[[i]],  lwd = 1, xlim = c(.1, .9), ylim = c(.1, .9))
+# }
+# image.plot(probC, zlim = c(0, 1), xlim = c(0, 1), ylim = c(0, 1),
+#            xaxt = "n", yaxt = "n", col = viridis(10))
+# mtext("Shape C", side = 3, outer = TRUE, font = 1, line = 0.5)
 #dev.off()
-
+cross_size <- .5
 pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/shapesAll.pdf", 
     height = 2, width = 2)
 par(oma=c(0,0,0,0), mar = c(0, 0, .8, 0), mfrow = c(1, 4)) 
 par(mfrow = c(3, 3))
 plot(gens_shapeA_2$polys[[1]], lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85),
      main = "Shape A", cex.main = .8)
+points(C[1], C[2], pch = 3, cex = cross_size)
 plot(gens_shapeB$polys[[1]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85),
      main = "Shape B", cex.main = .8)
+points(C[1], C[2], pch = 3, cex = cross_size)
 plot(gens_shapeC$polys[[1]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85),
      main = "Shape C", cex.main = .8)
+points(C[1], C[2], pch = 3, cex = cross_size)
 plot(gens_shapeA_2$polys[[2]], lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+points(C[1], C[2], pch = 3, cex = cross_size)
 plot(gens_shapeB$polys[[2]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+points(C[1], C[2], pch = 3, cex = cross_size)
 plot(gens_shapeC$polys[[2]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+points(C[1], C[2], pch = 3, cex = cross_size)
 plot(gens_shapeA_2$polys[[3]], lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+points(C[1], C[2], pch = 3, cex = cross_size)
 plot(gens_shapeB$polys[[3]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+points(C[1], C[2], pch = 3, cex = cross_size)
 plot(gens_shapeC$polys[[3]],  lwd = 1, xlim = c(.15, .85), ylim = c(.15, .85))
+points(C[1], C[2], pch = 3, cex = cross_size)
 dev.off()
 
 pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/probFields.pdf", 
