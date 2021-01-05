@@ -16,8 +16,8 @@ circle_pts <- function(x, y, delta, N = 100) {
 }
 
 pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Figures/fractals.pdf",
-    height = 4.2, width = 3)
-layout(matrix(nrow = 5, ncol = 1, data = c(1, 1, 2, 2, 3)))
+    height = 4, width = 3)
+layout(matrix(nrow = 7, ncol = 1, data = c(1, 1, 1, 2, 2, 2, 3)))
 par(oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0))
 
 #fractal with circle
@@ -67,11 +67,10 @@ diff_area <- gArea(gDifference(centers_star$approxs[[1]], frac_cont[[1]])) +
   gArea(gDifference(frac_cont[[1]], centers_star$approxs[[1]]))
 diff_area/gArea(frac_cont[[1]])
 
-
 #zoomed in
 n_zoom <- 64
 plot(frac[1:n_zoom,], type= 'l', xaxt = "n", yaxt = "n",
-     xlab = "", ylab = '', xlim = c(.07, .37), ylim = c(.68, .79),
+     xlab = "", ylab = '', xlim = c(.07, .37), ylim = c(.59, .89),
      bty = 'n')
 cent_ind <- c(n_centers, 1:(n_zoom/space + 1))
 points(centers[cent_ind,], col = 'red', type = 'l', lwd = 1)

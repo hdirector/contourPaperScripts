@@ -17,16 +17,16 @@ box_size <- 25
 #setting for executing 
 eps <- .1 
 n_gen <- 100
-p_init <- 110
+p_init <- 150#110
 p_eval <- 100
-delta <- .05
+delta <- .03#05
 space <- .025
 step <- .1
 under <- FALSE
 
 #MCMC settings
 n_iter <- 50000
-burn_in <-  25000
+burn_in <- 25000
 sigmaProp_sigma2 <- .05
 muProp_sigma2 <- .05
 kappaProp_SD <- .3
@@ -55,7 +55,7 @@ sep <- all[,9,,]
 
 coords <- list()
 for (i in 1:n_years) {
-  #find coordinates of largest contigous region in Central Arctic
+  #find coordinates of largest contiguous region in Central Arctic
   temp <- disaggregate(get_region(sep[i,,], dat_type = "bootstrap", level = 15))
   temp <- temp[which.max(gArea(temp, byid = TRUE))]
   temp <- disaggregate(rm_holes(keep_poly(gIntersection(reg, temp))))
@@ -63,7 +63,7 @@ for (i in 1:n_years) {
   coords[[i]] <- temp@polygons[[1]]@Polygons[[1]]@coords
 }
 
-#rescale everything 
+# rescale everything 
 temp_rescale <- rescale(coords = coords, eps = eps, box_size = box_size, 
                         land = land, grid = grid, bd = reg_coords)
 
@@ -105,7 +105,6 @@ C_eval <- best_C(bd = bd_scale, conts = obs$polys, thetas = thetas_eval_all,
                  space = space, parallel = TRUE, under = FALSE)
 area_err <- mean(error_areas(conts = obs$polys, C = C_eval, thetas = thetas_eval_all, 
                 under = FALSE))
-
 l_untrim_eval <- make_l(C = C_eval, thetas_eval_all)
 l_eval <- lapply(l_untrim_eval, function(x){gIntersection(x, bd_poly)})
 on_can_arch_eval <- sapply(l_eval, function(x){gIntersects(no_var, x)})
@@ -114,7 +113,7 @@ thetas_eval <- thetas_eval_all[!on_can_arch_eval]
 
 #input settings
 for (test_year in start_year:end_year)  {
-  #Seperate out training and testing set
+  #Separate out training and testing set
   eval_ind <- which(years == test_year)
   train <- obs
   train$polys[[eval_ind]] <- NULL
@@ -191,8 +190,7 @@ for (test_year in start_year:end_year)  {
                     bd = bd_scale, fix_ind = l_rm, rand_ind = l_keep,
                     fix_y =  l_lengths_all[l_rm])
 
-  #set up grid to align with data
-  grid_need <- 1/box_size_scale
+  #set up grid to align with rescaled data
   xmn <- ymn <- 0 
   xmx <- ymx <- 1 
   x_bds <- seq(xmn, xmx, by = box_size_scale[1])
@@ -212,25 +210,26 @@ for (test_year in start_year:end_year)  {
   cover <- sapply(creds, 
          function(x){eval_cred_reg(truth = eval$polys, cred_reg = x, 
                                    center = C_eval,  thetas = thetas_eval, 
-                                   nrows = n_grid, ncols = n_grid)})
+                                   nrows = n_grid_x, ncols = n_grid_y,
+                                   land = land_scale)})
   
   if (test_year == 2017) {
     pdf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/figures/seaIce_cred.pdf",
         height = 3.6, width = 3.7)
     par(oma = rep(0, 4), mar = c(2, 0, 0, 0))
-    temp <- eval_cred_reg(truth = eval$polys, cred_reg = creds[[1]], 
-                          center = C_eval,  thetas = thetas_eval, 
-                          nrows = n_grid, ncols = n_grid, plotting = TRUE,
+    temp <- eval_cred_reg(truth = eval$polys, cred_reg = creds[[1]],
+                          center = C_eval,  thetas = thetas_eval,
+                          nrows = n_grid_x, ncols = n_grid_y, plotting = TRUE,
                           land = land_scale, not_reg  = not_reg)
     legend(-.07, -.01, cex = .48, ncol = 2,
-           legend = c(expression(paste("contour line (", bold(bar("S"))[i], ")")), 
+           legend = c(expression(paste("contour line (", bold(bar("S"))[i], ")")),
                       expression(paste("credible interval (", bold(I [1 - alpha]), ")")),
                       "land", "outside region",
                       expression(paste("starting point (", bold("C"),  ")")),
-                      expression(paste("intersection of ", bold(I [1 - alpha]), 
+                      expression(paste("intersection of ", bold(I [1 - alpha]),
                                        " and line k (",
                                        W["i,k"], " = 1)")),
-                      expression(paste("intersection of ", bold(I [1 - alpha]), 
+                      expression(paste("intersection of ", bold(I [1 - alpha]),
                                        " and line k (",
                                        W["i,k"], " = 0)"))),
            pch = c(NA, rep(22, 3), 3, NA, NA), lty = c(1, rep(NA, 4), 1, 1),
@@ -240,7 +239,7 @@ for (test_year in start_year:end_year)  {
            xpd = NA,  bg = "white", border = c("white", rep("black",3),"white", "white"))
     dev.off()
   }
- 
+
   
   save(cover, file = sprintf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Examples/ex_results/cover_year%i.rda", 
                              test_year))

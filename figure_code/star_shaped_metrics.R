@@ -105,9 +105,9 @@ points(curl_C_over, pch = 3, col = 'blue', cex = 2)
 
 #labels
 mtext(text = "Contour", side = 3, line = 0, at = .18, outer = TRUE)
-mtext(text = "Under-estimated.", side = 3, line = 0, at = .5, 
+mtext(text = "Underestimated", side = 3, line = 0, at = .5, 
       outer = TRUE)
-mtext(text = "Over-estimated", side = 3, line = 0, at = .82,
+mtext(text = "Overestimated", side = 3, line = 0, at = .82,
       outer = TRUE)
 mtext(text = "Contour 1", side = 2, line = -2, at = .89, outer = TRUE)
 mtext(text = "Contour 2", side = 2, line = -2, at = .63, outer = TRUE)
