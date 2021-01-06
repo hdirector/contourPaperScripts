@@ -1,10 +1,11 @@
 years <- 2008:2017
 n_years <- length(years)
-p <- 71
+p <- 68
 cover_all <- matrix(nrow = p, ncol = 3, data = 0)
 for (year in years) {
   load(sprintf("/Users/hdirector/Dropbox/Contours/ContourPaperScripts/Examples/ex_results/cover_year%i.rda", year))
   cover_all <- cover_all + cover
+  print(year)
 }
 
 

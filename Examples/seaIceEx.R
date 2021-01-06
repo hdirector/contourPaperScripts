@@ -17,9 +17,9 @@ box_size <- 25
 #setting for executing 
 eps <- .1 
 n_gen <- 100
-p_init <- 150#110
+p_init <- 150
 p_eval <- 100
-delta <- .03#05
+delta <- .03
 space <- .025
 step <- .1
 under <- FALSE
